@@ -1,12 +1,18 @@
 import * as React from 'react';
 
+type Translation = {
+  default: string;
+  plural: string;
+};
+
 type Translations = Record<
   string,
-  Record<string, string | Record<string, string>>
+  Record<string, Translation | string | Record<string, string | Translation>>
 >;
+
 type Dispatch = (language: string) => void;
 type TranslateProviderProps = {
-  defaultLanguage: string;
+  defaultLanguage?: string;
   translations: Translations;
   children: React.ReactNode;
 };
@@ -25,6 +31,8 @@ function TranslateProvider({
   translations,
   children,
 }: TranslateProviderProps) {
+  defaultLanguage = defaultLanguage || window.navigator.language;
+  defaultLanguage = defaultLanguage.substring(0, 2);
   const [language, setLanguage] = React.useState(defaultLanguage);
 
   return (
@@ -56,24 +64,68 @@ function useTranslateDispatch() {
   return context;
 }
 
+type TranslateParams = {
+  count?: number;
+  prefix?: string;
+};
+
 function useTranslate() {
   const { language, translations } = useTranslateState();
   const setLanguage = useTranslateDispatch();
 
   function checkMissingTranslations(translations: Translations) {
     // TODO: check if the translations have the same keys
-    return true;
+    return false;
   }
 
-  function t(id: string) {
-    const idSplit = id.split('.');
-    const componentName = translations[language][idSplit[0]];
-    if (idSplit.length === 2 && typeof componentName !== 'string') {
-      return componentName[idSplit[1]];
-    }
-    return translations[language][id];
+  function withPrefix(prefix: string) {
+    return (id: string, params?: TranslateParams) => {
+      prefix = (params && params.prefix) || prefix;
+      return t(id, { count: params && params.count, prefix });
+    };
   }
-  return { t, setLanguage, checkMissingTranslations };
+
+  function t(id: string, params?: TranslateParams): string {
+    const base = translations[language];
+    const baseWithId = base[id];
+
+    if (typeof baseWithId === 'string') {
+      return baseWithId;
+    } else if (isTranslation(baseWithId)) {
+      if (params && params.count && params.count > 1) {
+        return baseWithId.plural;
+      }
+      return baseWithId.default;
+    }
+
+    if (params && params.prefix && base[params.prefix]) {
+      const baseWithPrefix = base[params.prefix];
+
+      if (
+        typeof baseWithPrefix !== 'string' &&
+        !isTranslation(baseWithPrefix)
+      ) {
+        const baseWithPrefixAndId = baseWithPrefix[id];
+        if (typeof baseWithPrefixAndId === 'string') {
+          return baseWithPrefixAndId;
+        } else {
+          if (params && params.count && params.count > 1) {
+            return baseWithPrefixAndId.plural;
+          }
+          return baseWithPrefixAndId.default;
+        }
+      }
+    }
+
+    console.warn(`[Translate] Missing id: ${id}`);
+    return id;
+  }
+
+  return { t, withPrefix, setLanguage, checkMissingTranslations };
+}
+
+function isTranslation(object: any): object is Translation {
+  return Boolean(object && object.default);
 }
 
 export { TranslateProvider, useTranslate };
