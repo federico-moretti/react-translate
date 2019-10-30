@@ -4,32 +4,22 @@ import { render, fireEvent } from '@testing-library/react';
 import { TranslateProvider, useTranslate } from '../src';
 
 const translations = {
-  it: {
-    hello: 'Ciao!',
-    apple: {
-      default: 'Mela',
-      plural: 'Mele',
-    },
-    intro: {
-      how: 'Come va?',
-      notification: {
-        default: 'Hai una notifica!',
-        plural: 'Hai più notifiche!',
-      },
-    },
+  pear: {
+    it: 'Pera',
+    en: 'Pear',
   },
-  en: {
-    hello: 'Hello!',
-    apple: {
-      default: 'Apple',
-      plural: 'Apples',
+  apple: {
+    it: ['Mela', 'Mele'],
+    en: ['Apple', 'Apples'],
+  },
+  sub: {
+    orange: {
+      it: 'Arancia',
+      en: 'Orange',
     },
-    intro: {
-      how: 'How are you?',
-      notification: {
-        default: 'You have one notification!',
-        plural: 'You have multiple notifications!',
-      },
+    strawberry: {
+      en: ['1 strawberry', '2+ strawberries', '0 strawberries'],
+      it: ['1 ciliegia', '2+ ciliegie', '0 ciliegie'],
     },
   },
 };
@@ -39,10 +29,10 @@ function Message({ id, count }: { id: string; count?: number }) {
   return <p>{t(id, { count })}</p>;
 }
 
-function MessageIntro({ id, count }: { id: string; count?: number }) {
+function MessageSub({ id, count }: { id: string; count?: number }) {
   const { withPrefix } = useTranslate();
-  const tIntro = withPrefix('intro');
-  return <p>{tIntro(id, { count })}</p>;
+  const sub = withPrefix('sub');
+  return <p>{sub(id, { count })}</p>;
 }
 
 function ChangeLanguage({ language }: { language: string }) {
@@ -62,61 +52,77 @@ describe('Translate', () => {
   it('translates simple text', () => {
     const { getByText } = render(
       <Provider>
-        <Message id="hello" />
-        <MessageIntro id="how" />
+        <Message id="pear" />
       </Provider>
     );
 
-    expect(getByText('Ciao!')).toBeInTheDocument();
-    expect(getByText('Come va?')).toBeInTheDocument();
+    expect(getByText('Pera')).toBeInTheDocument();
   });
 
-  it('translates with default count', () => {
+  it('translates with sub', () => {
     const { getByText } = render(
       <Provider>
-        <Message id="hello" />
-        <Message id="apple" />
-        <MessageIntro id="notification" count={1} />
+        <Message id="sub.strawberry" />
+        <MessageSub id="orange" />
       </Provider>
     );
 
-    expect(getByText('Ciao!')).toBeInTheDocument();
-    expect(getByText('Mela')).toBeInTheDocument();
-    expect(getByText('Hai una notifica!')).toBeInTheDocument();
+    expect(getByText('1 ciliegia')).toBeInTheDocument();
+    expect(getByText('Arancia')).toBeInTheDocument();
   });
 
   it('translates with plural count', () => {
     const { getByText } = render(
       <Provider>
-        <Message id="hello" />
         <Message id="apple" count={2} />
-        <MessageIntro id="notification" count={10} />
+        <MessageSub id="strawberry" count={10} />
       </Provider>
     );
 
-    expect(getByText('Ciao!')).toBeInTheDocument();
     expect(getByText('Mele')).toBeInTheDocument();
-    expect(getByText('Hai più notifiche!')).toBeInTheDocument();
+    expect(getByText('2+ ciliegie')).toBeInTheDocument();
+  });
+
+  it('translates with 0 count', () => {
+    const { getByText } = render(
+      <Provider>
+        <MessageSub id="strawberry" count={0} />
+      </Provider>
+    );
+
+    expect(getByText('0 ciliegie')).toBeInTheDocument();
+  });
+
+  it('translates possible errors', () => {
+    const { getByText } = render(
+      <Provider>
+        <Message id="pear" count={0} />
+        <Message id="sub.apple" count={5} />
+      </Provider>
+    );
+
+    expect(getByText('Pera')).toBeInTheDocument();
+    expect(getByText('sub.apple')).toBeInTheDocument();
   });
 
   it('translates and change language', () => {
     const { getByText } = render(
       <Provider>
-        <Message id="hello" />
-        <MessageIntro id="how" />
-        <MessageIntro id="notification" count={10} />
+        <Message id="pear" />
+        <MessageSub id="orange" />
+        <MessageSub id="strawberry" count={10} />
         <ChangeLanguage language="en" />
       </Provider>
     );
 
-    expect(getByText('Ciao!')).toBeInTheDocument();
-    expect(getByText('Come va?')).toBeInTheDocument();
-    expect(getByText('Hai più notifiche!')).toBeInTheDocument();
+    expect(getByText('Pera')).toBeInTheDocument();
+    expect(getByText('Arancia')).toBeInTheDocument();
+    expect(getByText('2+ ciliegie')).toBeInTheDocument();
 
     fireEvent.click(getByText(/change/i));
 
-    expect(getByText('Hello!')).toBeInTheDocument();
-    expect(getByText('How are you?')).toBeInTheDocument();
-    expect(getByText('You have multiple notifications!')).toBeInTheDocument();
+    expect(getByText('Pear')).toBeInTheDocument();
+    expect(getByText('Orange')).toBeInTheDocument();
+    expect(getByText('2+ strawberries')).toBeInTheDocument();
   });
 });

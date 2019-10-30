@@ -4,16 +4,22 @@ import * as ReactDOM from 'react-dom';
 import { TranslateProvider, useTranslate } from '../.';
 
 const translations = {
-  it: {
-    hello: 'Ciao!',
-    intro: {
-      how: 'Come va?',
-    },
+  pear: {
+    it: 'Pera',
+    en: 'Pear',
   },
-  en: {
-    hello: 'Hello!',
-    intro: {
-      how: 'How are you?',
+  apple: {
+    it: ['Mela', 'Mele'],
+    en: ['Apple', 'Apples'],
+  },
+  sub: {
+    orange: {
+      it: 'Arancia',
+      en: 'Orange',
+    },
+    strawberry: {
+      en: ['1 strawberry', '2+ strawberries', '0 strawberries'],
+      it: ['1 ciliegia', '2+ ciliegie', '0 ciliegie'],
     },
   },
 };
@@ -23,8 +29,10 @@ const App = () => {
   console.log('render');
   return (
     <div>
-      <p>{t('hello')}</p>
-      <p>{t('intro.how')}</p>
+      <p>{t('pear')}</p>
+      <p>{t('apple', { count: 2 })}</p>
+      <p>{t('sub.strawberry')}</p>
+      <p>{t('sub.strawberry', { count: 0 })}</p>
       <div>
         <button onClick={() => setLanguage('it')}>Change to it</button>
         <button onClick={() => setLanguage('en')}>Change to en</button>
