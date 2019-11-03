@@ -62,6 +62,7 @@ function useTranslateDispatch() {
 
 type TranslateParams = {
   count?: number;
+  prefix?: string;
 };
 
 function useTranslate() {
@@ -77,13 +78,14 @@ function useTranslate() {
   }
 
   function withPrefix(prefix: string) {
-    return (id: string, params?: TranslateParams) => {
-      return t(prefix + '.' + id, params);
+    return (id: string, params?: Omit<TranslateParams, 'prefix'>) => {
+      return t(id, { ...params, prefix });
     };
   }
 
   function t(id: string, params?: TranslateParams): string {
-    const translation = get(translations, id);
+    const p = params && params.prefix ? params.prefix + '.' : '';
+    const translation = get(translations, p + id);
 
     if (isTranslation(translation, language)) {
       if (isTranslationBase(translation, language)) {
@@ -100,7 +102,8 @@ function useTranslate() {
     return checkValueThenReturn(undefined, id);
   }
 
-  return { t, withPrefix, setLanguage, checkMissingTranslations };
+  t.withPrefix = withPrefix;
+  return { t, setLanguage };
 }
 
 function checkValueThenReturn(t: undefined | string, id: string) {
@@ -120,4 +123,15 @@ function isTranslation(object: any, language: string): object is Translation {
   return Boolean(object && object[language]);
 }
 
-export { TranslateProvider, useTranslate };
+type TProps = {
+  id: string;
+  type?: keyof React.ReactHTML;
+  prefix?: string;
+} & TranslateParams;
+function T(props: TProps) {
+  const { id, type = React.Fragment, ...params } = props;
+  const { t } = useTranslate();
+  return React.createElement(type, undefined, t(id, params));
+}
+
+export { TranslateProvider, useTranslate, T };
