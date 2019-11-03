@@ -13,9 +13,11 @@ const translations = {
     en: ['Apple', 'Apples'],
   },
   sub: {
-    orange: {
-      it: 'Arancia',
-      en: 'Orange',
+    twice: {
+      orange: {
+        it: 'Arancia',
+        en: 'Orange',
+      },
     },
     strawberry: {
       en: ['1 strawberry', '2+ strawberries', '0 strawberries'],
@@ -25,14 +27,21 @@ const translations = {
 };
 
 const App = () => {
-  const { t, setLanguage } = useTranslate();
+  const { t, setLanguage, withPrefix } = useTranslate();
+  const sub = withPrefix('sub');
   console.log('render');
   return (
     <div>
       <p>{t('pear')}</p>
       <p>{t('apple', { count: 2 })}</p>
+      <br />
       <p>{t('sub.strawberry')}</p>
       <p>{t('sub.strawberry', { count: 0 })}</p>
+      <p>{t('sub.twice.orange', { count: 0 })}</p>
+      <br />
+      <p>{sub('strawberry')}</p>
+      <p>{sub('strawberry', { count: 0 })}</p>
+      <p>{sub('twice.orange', { count: 0 })}</p>
       <div>
         <button onClick={() => setLanguage('it')}>Change to it</button>
         <button onClick={() => setLanguage('en')}>Change to en</button>
