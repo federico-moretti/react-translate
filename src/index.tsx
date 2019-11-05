@@ -102,8 +102,7 @@ function useTranslate() {
     return checkValueThenReturn(undefined, id);
   }
 
-  t.withPrefix = withPrefix;
-  return { t, setLanguage };
+  return { t, withPrefix, setLanguage };
 }
 
 function checkValueThenReturn(t: undefined | string, id: string) {

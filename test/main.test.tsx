@@ -1,6 +1,6 @@
 import * as React from 'react';
 import '@testing-library/jest-dom/extend-expect';
-import { render, fireEvent } from '@testing-library/react';
+import { render as baseRender, fireEvent } from '@testing-library/react';
 import { TranslateProvider, useTranslate, T } from '../src';
 
 const consoleSpy = jest.spyOn(global.console, 'warn');
@@ -19,6 +19,10 @@ const translations = {
       it: 'Arancia',
       en: 'Orange',
     },
+    cantaloupe: {
+      it: 'Melone',
+      en: 'Cantaloupe',
+    },
     strawberry: {
       en: ['1 strawberry', '2+ strawberries', '0 strawberries'],
       it: ['1 ciliegia', '2+ ciliegie', '0 ciliegie'],
@@ -26,15 +30,10 @@ const translations = {
   },
 };
 
-function Message({ id, count }: { id: string; count?: number }) {
-  const { t } = useTranslate();
-  return <p>{t(id, { count })}</p>;
-}
-
-function MessageSub({ id, count }: { id: string; count?: number }) {
-  const { t } = useTranslate();
-  const sub = t.withPrefix('sub');
-  return <p>{sub(id, { count })}</p>;
+function Sub({ id }: { id: string }) {
+  const { withPrefix } = useTranslate();
+  const t = withPrefix('sub');
+  return <p>{t(id)}</p>;
 }
 
 function ChangeLanguage({ language }: { language: string }) {
@@ -50,35 +49,40 @@ function Provider({ children }: { children: React.ReactNode }) {
   );
 }
 
+function render(ui: React.ReactElement, options?: any) {
+  return baseRender(ui, { wrapper: Provider, ...options });
+}
+
 describe('Translate', () => {
   it('translates simple text', () => {
     const { getByText } = render(
-      <Provider>
-        <T type="p" id="pear" />
-      </Provider>
+      <p>
+        <T id="pear" />
+      </p>
     );
-
     expect(getByText('Pera')).toBeInTheDocument();
   });
 
   it('translates with sub', () => {
     const { getByText } = render(
-      <Provider>
+      <>
         <T type="p" id="sub.strawberry" />
         <T type="p" prefix="sub" id="orange" />
-      </Provider>
+        <Sub id="cantaloupe" />
+      </>
     );
 
     expect(getByText('1 ciliegia')).toBeInTheDocument();
     expect(getByText('Arancia')).toBeInTheDocument();
+    expect(getByText('Melone')).toBeInTheDocument();
   });
 
   it('translates with plural count', () => {
     const { getByText } = render(
-      <Provider>
+      <>
         <T type="p" id="apple" count={2} />
         <T type="p" prefix="sub" id="strawberry" count={10} />
-      </Provider>
+      </>
     );
 
     expect(getByText('Mele')).toBeInTheDocument();
@@ -87,9 +91,7 @@ describe('Translate', () => {
 
   it('translates with 0 count', () => {
     const { getByText } = render(
-      <Provider>
-        <T type="p" prefix="sub" id="strawberry" count={0} />
-      </Provider>
+      <T type="p" prefix="sub" id="strawberry" count={0} />
     );
 
     expect(getByText('0 ciliegie')).toBeInTheDocument();
@@ -97,10 +99,10 @@ describe('Translate', () => {
 
   it('translates possible errors', () => {
     const { getByText } = render(
-      <Provider>
+      <>
         <T type="p" id="pear" count={0} />
         <T type="p" id="sub.apple" count={5} />
-      </Provider>
+      </>
     );
 
     expect(getByText('Pera')).toBeInTheDocument();
@@ -114,12 +116,12 @@ describe('Translate', () => {
 
   it('translates and change language', () => {
     const { getByText } = render(
-      <Provider>
+      <>
         <T type="p" id="pear" />
         <T type="p" id="sub.orange" />
         <T type="p" prefix="sub" id="strawberry" count={10} />
         <ChangeLanguage language="en" />
-      </Provider>
+      </>
     );
 
     expect(getByText('Pera')).toBeInTheDocument();
