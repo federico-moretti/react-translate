@@ -1,8 +1,8 @@
 {
-  "name": "translate",
-  "version": "0.1.0",
+  "name": "@federico.moretti/react-translate",
+  "version": "0.0.0",
   "main": "dist/index.js",
-  "module": "dist/translate.esm.js",
+  "module": "dist/react-translate.esm.js",
   "typings": "dist/index.d.ts",
   "files": [
     "dist"
