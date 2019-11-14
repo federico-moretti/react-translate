@@ -10,6 +10,7 @@ Translate your React app without any hassle and with no setup!
 - Singular, plural and zero based on count
 - Lightweight (~2KB minified)
 - Built with TypeScript
+- ~95% code coverage
 
 ## Installing
 
@@ -149,6 +150,12 @@ const translations = {
   },
 };
 ```
+
+## Coverage
+
+| File      | % Stmts | % Branch | % Funcs | % Lines |
+| --------- | ------- | -------- | ------- | ------- |
+| All files | 96.23   | 90.32    | 100     | 95.45   |
 
 ## Licence
 
