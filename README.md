@@ -4,9 +4,10 @@ Translate your React app without any hassle and with no setup!
 
 ## Features
 
-- Hooks and component translation
+- Translate function
+- Translate component
 - Allow nested translations
-- String plurals
+- Singular, plural and zero based on count
 - Lightweight (~2KB minified)
 - Built with TypeScript
 
@@ -77,9 +78,9 @@ ReactDOM.render(
 
 ## API
 
-### `t(id: string, params?: TranslateParams): string`
+#### `t(id: string, params?: TranslateParams): string`
 
-It returns the translation.
+It returns the translation as a string.
 
 - `id`
   - use dot notation to get nested translations
@@ -87,13 +88,13 @@ It returns the translation.
   - `count?: number`
     - select singular, plural or zero
   - `prefix?: string`
-    - allows to get to nester translations
+    - allows to get to nested translations
 
-### `setLanguage(language: string): void`
+#### `setLanguage(language: string): void`
 
 Changes the language.
 
-### `withPrefix(prefix: string): function`
+#### `withPrefix(prefix: string): function`
 
 It returns `t(id: string, params: { count: number }): string`
 
@@ -104,9 +105,9 @@ const t = withPrefix('dashboard');
 const dashboardTitle = t('title'); // 'dashboard.title'
 ```
 
-### `<T />`
+#### `<T />`
 
-Creates a text node (or another element) translated.
+Creates a text node (or another element) with the translation.
 
 - `id: string`
 - `type: keyof React.ReactHTML`
@@ -114,7 +115,7 @@ Creates a text node (or another element) translated.
 - `prefix: string`
 - `count: number`
 
-### `<TranslateProvider />`
+#### `<TranslateProvider />`
 
 Wrap the app with the provider.
 
@@ -124,7 +125,7 @@ Wrap the app with the provider.
 - `translations: Translations`
   - required
 
-### Translation object
+#### Translation object
 
 ```js
 const translations = {
