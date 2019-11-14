@@ -1,6 +1,6 @@
 {
   "name": "@federico.moretti/react-translate",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "dist/index.js",
   "module": "dist/react-translate.esm.js",
   "typings": "dist/index.d.ts",
@@ -31,9 +31,9 @@
     "@testing-library/jest-dom": "^4.1.2",
     "@testing-library/react": "^9.3.0",
     "@types/jest": "^24.0.19",
+    "@types/lodash.get": "^4.4.6",
     "@types/react": "^16.9.7",
     "@types/react-dom": "^16.9.2",
-    "@types/lodash.get": "^4.4.6",
     "husky": "^3.0.9",
     "react": "^16.10.2",
     "react-dom": "^16.10.2",
