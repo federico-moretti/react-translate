@@ -1,6 +1,9 @@
 import React from 'react';
 import get from 'lodash.get';
 
+// TODO: add check if translation is valid
+// TODO: add translations merge
+
 type TranslationBase = { [language: string]: string };
 type TranslationWithPlural = { [language: string]: string[] };
 type Translation = TranslationBase | TranslationWithPlural;
@@ -68,14 +71,6 @@ type TranslateParams = {
 function useTranslate() {
   const { language, translations } = useTranslateState();
   const setLanguage = useTranslateDispatch();
-
-  function checkMissingTranslations(
-    translations: unknown,
-    languages: string[]
-  ) {
-    // TODO: check if the translations have the same keys
-    return false;
-  }
 
   function withPrefix(prefix: string) {
     return (id: string, params?: Omit<TranslateParams, 'prefix'>) => {

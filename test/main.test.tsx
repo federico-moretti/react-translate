@@ -1,34 +1,10 @@
 import * as React from 'react';
 import '@testing-library/jest-dom/extend-expect';
 import { render as baseRender, fireEvent } from '@testing-library/react';
-import { TranslateProvider, useTranslate, T } from '../src';
+import { T, useTranslate, TranslateProvider } from '../src';
+import { translations, badTranslations } from './data';
 
 const consoleSpy = jest.spyOn(global.console, 'warn');
-
-const translations = {
-  pear: {
-    it: 'Pera',
-    en: 'Pear',
-  },
-  apple: {
-    it: ['Mela', 'Mele'],
-    en: ['Apple', 'Apples'],
-  },
-  sub: {
-    orange: {
-      it: 'Arancia',
-      en: 'Orange',
-    },
-    cantaloupe: {
-      it: 'Melone',
-      en: 'Cantaloupe',
-    },
-    strawberry: {
-      en: ['1 strawberry', '2+ strawberries', '0 strawberries'],
-      it: ['1 ciliegia', '2+ ciliegie', '0 ciliegie'],
-    },
-  },
-};
 
 function Sub({ id }: { id: string }) {
   const { withPrefix } = useTranslate();
@@ -55,16 +31,23 @@ function render(ui: React.ReactElement, options?: any) {
 
 describe('Translate', () => {
   it('translates simple text', () => {
-    const { getByText } = render(
+    const { container } = render(
       <p>
         <T id="pear" />
       </p>
     );
-    expect(getByText('Pera')).toBeInTheDocument();
+
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          Pera
+        </p>
+      </div>
+    `);
   });
 
   it('translates with sub', () => {
-    const { getByText } = render(
+    const { container } = render(
       <>
         <T type="p" id="sub.strawberry" />
         <T type="p" prefix="sub" id="orange" />
@@ -72,50 +55,78 @@ describe('Translate', () => {
       </>
     );
 
-    expect(getByText('1 ciliegia')).toBeInTheDocument();
-    expect(getByText('Arancia')).toBeInTheDocument();
-    expect(getByText('Melone')).toBeInTheDocument();
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          1 ciliegia
+        </p>
+        <p>
+          Arancia
+        </p>
+        <p>
+          Melone
+        </p>
+      </div>
+    `);
   });
 
   it('translates with plural count', () => {
-    const { getByText } = render(
+    const { container } = render(
       <>
         <T type="p" id="apple" count={2} />
         <T type="p" prefix="sub" id="strawberry" count={10} />
       </>
     );
 
-    expect(getByText('Mele')).toBeInTheDocument();
-    expect(getByText('2+ ciliegie')).toBeInTheDocument();
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          Mele
+        </p>
+        <p>
+          2+ ciliegie
+        </p>
+      </div>
+    `);
   });
 
   it('translates with 0 count', () => {
-    const { getByText } = render(
+    const { container } = render(
       <T type="p" prefix="sub" id="strawberry" count={0} />
     );
 
-    expect(getByText('0 ciliegie')).toBeInTheDocument();
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          0 ciliegie
+        </p>
+      </div>
+    `);
   });
 
-  it('translates possible errors', () => {
-    const { getByText } = render(
+  it('translates with missing id', () => {
+    const { container } = render(
       <>
-        <T type="p" id="pear" count={0} />
         <T type="p" id="sub.apple" count={5} />
       </>
     );
 
-    expect(getByText('Pera')).toBeInTheDocument();
-    expect(getByText('sub.apple')).toBeInTheDocument();
     expect(consoleSpy).toHaveBeenCalledWith(
       '[Translate] Missing id: sub.apple'
     );
-
     consoleSpy.mockReset();
+
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          sub.apple
+        </p>
+      </div>
+    `);
   });
 
   it('translates and change language', () => {
-    const { getByText } = render(
+    const { container, getByText } = render(
       <>
         <T type="p" id="pear" />
         <T type="p" id="sub.orange" />
@@ -124,14 +135,40 @@ describe('Translate', () => {
       </>
     );
 
-    expect(getByText('Pera')).toBeInTheDocument();
-    expect(getByText('Arancia')).toBeInTheDocument();
-    expect(getByText('2+ ciliegie')).toBeInTheDocument();
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          Pera
+        </p>
+        <p>
+          Arancia
+        </p>
+        <p>
+          2+ ciliegie
+        </p>
+        <button>
+          Change language
+        </button>
+      </div>
+    `);
 
     fireEvent.click(getByText(/change/i));
 
-    expect(getByText('Pear')).toBeInTheDocument();
-    expect(getByText('Orange')).toBeInTheDocument();
-    expect(getByText('2+ strawberries')).toBeInTheDocument();
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          Pear
+        </p>
+        <p>
+          Orange
+        </p>
+        <p>
+          2+ strawberries
+        </p>
+        <button>
+          Change language
+        </button>
+      </div>
+    `);
   });
 });
