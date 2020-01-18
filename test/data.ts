@@ -7,6 +7,14 @@ export const translations = {
     it: ['Mela', 'Mele'],
     en: ['Apple', 'Apples'],
   },
+  vegetable: {
+    root: {
+      carrot: {
+        it: 'Carota',
+        en: 'Carrot',
+      },
+    },
+  },
   sub: {
     orange: {
       it: 'Arancia',

@@ -46,6 +46,24 @@ describe('Translate', () => {
     `);
   });
 
+  it('translates nested text', () => {
+    const { container } = render(
+      <p>
+        <T id="vegetable.root.carrot" />
+        <T prefix="vegetable.root" id="carrot" />
+      </p>
+    );
+
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          Carota
+          Carota
+        </p>
+      </div>
+    `);
+  });
+
   it('translates with sub', () => {
     const { container } = render(
       <>
