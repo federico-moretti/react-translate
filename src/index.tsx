@@ -79,15 +79,15 @@ function useTranslate() {
   }
 
   function t(id: string, params?: TranslateParams): string {
-    const p = params && params.prefix ? params.prefix + '.' : '';
+    const p = params?.prefix ? params.prefix + '.' : '';
     const translation = get(translations, p + id);
 
     if (isTranslation(translation, language)) {
       if (isTranslationBase(translation, language)) {
         return checkValueThenReturn(translation[language], id);
-      } else if (params && params.count && params.count > 1) {
+      } else if (params?.count && params.count > 1) {
         return checkValueThenReturn(translation[language][1], id);
-      } else if (params && params.count === 0) {
+      } else if (params?.count === 0) {
         return checkValueThenReturn(translation[language][2], id);
       } else {
         return checkValueThenReturn(translation[language][0], id);
@@ -114,7 +114,7 @@ function isTranslationBase(
 }
 
 function isTranslation(object: any, language: string): object is Translation {
-  return Boolean(object && object[language]);
+  return Boolean(object?.[language]);
 }
 
 type TProps = {
