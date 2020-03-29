@@ -2,7 +2,7 @@ import * as React from 'react';
 import '@testing-library/jest-dom/extend-expect';
 import { render as baseRender, fireEvent } from '@testing-library/react';
 import { T, useTranslate, TranslateProvider, mergeTranslations } from '../src';
-import { translations, badTranslations } from './data';
+import { translations } from './data';
 
 const consoleSpy = jest.spyOn(global.console, 'warn');
 
