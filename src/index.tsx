@@ -1,8 +1,8 @@
 import React from 'react';
 import get from 'lodash.get';
+import merge from 'lodash.merge';
 
 // TODO: add check if translation is valid
-// TODO: add translations merge
 
 type TranslationBase = { [language: string]: string };
 type TranslationWithPlural = { [language: string]: string[] };
@@ -128,4 +128,36 @@ function T(props: TProps) {
   return React.createElement(type, undefined, t(id, params));
 }
 
-export { TranslateProvider, useTranslate, T };
+type TranslationsWithoutLanguage =
+  | string
+  | string[]
+  | { [key: string]: TranslationsWithoutLanguage };
+function addLanguageToTranslations(
+  translations: TranslationsWithoutLanguage,
+  language: string
+) {
+  const obj: Translations = {};
+  Object.entries(translations).forEach(([key, value]) => {
+    obj[key] = {};
+    if (typeof value === 'string' || Array.isArray(value)) {
+      obj[key][language] = value;
+    } else if (typeof value === 'object') {
+      obj[key] = addLanguageToTranslations(value, language);
+    }
+  });
+  return obj;
+}
+
+function mergeTranslations(
+  array: {
+    language: string;
+    translations: TranslationsWithoutLanguage;
+  }[]
+) {
+  const res = array.map(({ language, translations }) =>
+    addLanguageToTranslations(translations, language)
+  );
+  return res.reduce((acc, rec) => (acc = merge(acc, rec)), {});
+}
+
+export { TranslateProvider, useTranslate, T, mergeTranslations };
