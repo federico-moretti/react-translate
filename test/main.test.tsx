@@ -1,7 +1,7 @@
 import * as React from 'react';
 import '@testing-library/jest-dom/extend-expect';
 import { render as baseRender, fireEvent } from '@testing-library/react';
-import { T, useTranslate, TranslateProvider } from '../src';
+import { T, useTranslate, TranslateProvider, mergeTranslations } from '../src';
 import { translations, badTranslations } from './data';
 
 const consoleSpy = jest.spyOn(global.console, 'warn');
@@ -188,5 +188,35 @@ describe('Translate', () => {
         </button>
       </div>
     `);
+  });
+
+  it('merges 2 translations', () => {
+    const translationsEn: Record<string, any> = {
+      pear: 'Pear',
+      apple: ['Apple', 'Apples'],
+      sub: {
+        strawberry: ['1 strawberry', '2+ strawberries', '0 strawberry'],
+      },
+    };
+
+    const translationsIt: Record<string, any> = {
+      pear: 'Pera',
+      apple: ['Mela', 'Mele'],
+      sub: {
+        strawberry: ['1 ciliegia', '2+ ciliegie', '0 ciliegie'],
+      },
+    };
+
+    const merged: any = mergeTranslations([
+      { language: 'it', translations: translationsIt },
+      { language: 'en', translations: translationsEn },
+    ]);
+
+    expect(merged.pear.it).toBe('Pera');
+    expect(merged.pear.en).toBe('Pear');
+    expect(merged.apple.it[0]).toBe('Mela');
+    expect(merged.apple.en[0]).toBe('Apple');
+    expect(merged.sub.strawberry.it[2]).toBe('0 ciliegie');
+    expect(merged.sub.strawberry.en[2]).toBe('0 strawberry');
   });
 });
