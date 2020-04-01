@@ -30,8 +30,7 @@ function TranslateProvider({
   translations,
   children,
 }: TranslateProviderProps) {
-  defaultLanguage = defaultLanguage || window.navigator.language;
-  defaultLanguage = defaultLanguage.substring(0, 2);
+  defaultLanguage = defaultLanguage ?? window.navigator.language;
   const [language, setLanguage] = React.useState(defaultLanguage);
 
   return (
