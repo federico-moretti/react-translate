@@ -6,8 +6,8 @@ import merge from 'lodash.merge';
 
 type TranslationBase = { [language: string]: string };
 type TranslationWithPlural = { [language: string]: string[] };
-type Translation = TranslationBase | TranslationWithPlural;
-type Translations = { [key: string]: Translation | Translations };
+export type Translation = TranslationBase | TranslationWithPlural;
+export type Translations = { [key: string]: Translation | Translations };
 
 type Dispatch = (language: string) => void;
 type TranslateProviderProps = {
