@@ -52,11 +52,12 @@ const translations = {
 };
 
 function App() {
-  const { t, setLanguage, withPrefix } = useTranslate();
+  const { t, setLanguage, withPrefix, language } = useTranslate();
   const sub = withPrefix('sub');
 
   return (
     <div>
+      <p>Selected language: {language}</p>
       <p>{t('pear')}</p>
       <p>{t('apple', { count: 2 })}</p>
       <p>{t('sub.strawberry')}</p>
