@@ -1,6 +1,7 @@
 import * as React from 'react';
 import '@testing-library/jest-dom/extend-expect';
 import { render as baseRender, fireEvent } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react-hooks';
 import { T, useTranslate, TranslateProvider, mergeTranslations } from '../src';
 import { translations } from './data';
 
@@ -17,7 +18,7 @@ function ChangeLanguage({ language }: { language: string }) {
   return <button onClick={() => setLanguage(language)}>Change language</button>;
 }
 
-function Provider({ children }: { children: React.ReactNode }) {
+function Provider({ children }: { children?: React.ReactNode }) {
   return (
     <TranslateProvider defaultLanguage="it" translations={translations}>
       {children}
@@ -188,6 +189,24 @@ describe('Translate', () => {
         </button>
       </div>
     `);
+  });
+
+  it('contains language value', () => {
+    const { result } = renderHook(() => useTranslate(), {
+      wrapper: Provider,
+    });
+
+    act(() => {
+      result.current.setLanguage('it');
+    });
+
+    expect(result.current.language).toBe('it');
+
+    act(() => {
+      result.current.setLanguage('en-GB');
+    });
+
+    expect(result.current.language).toBe('en-GB');
   });
 
   it('merges 2 translations', () => {
