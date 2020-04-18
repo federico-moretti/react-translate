@@ -96,7 +96,7 @@ function useTranslate() {
     return checkValueThenReturn(undefined, id);
   }
 
-  return { t, withPrefix, setLanguage };
+  return { t, withPrefix, setLanguage, language };
 }
 
 function checkValueThenReturn(t: undefined | string, id: string) {
