@@ -20,7 +20,11 @@ function ChangeLanguage({ language }: { language: string }) {
 
 function Provider({ children }: { children?: React.ReactNode }) {
   return (
-    <TranslateProvider defaultLanguage="it" translations={translations}>
+    <TranslateProvider
+      defaultLanguage="it"
+      fallbackLanguage="en"
+      translations={translations}
+    >
       {children}
     </TranslateProvider>
   );
@@ -237,5 +241,53 @@ describe('Translate', () => {
     expect(merged.apple.en[0]).toBe('Apple');
     expect(merged.sub.strawberry.it[2]).toBe('0 ciliegie');
     expect(merged.sub.strawberry.en[2]).toBe('0 strawberry');
+  });
+
+  it('fallbacks if there is are translations', () => {
+    const { container, getByText } = render(
+      <>
+        <T type="p" id="pear" />
+        <T type="p" id="sub.orange" />
+        <T type="p" prefix="sub" id="strawberry" count={10} />
+        <ChangeLanguage language="de" />
+      </>
+    );
+
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          Pera
+        </p>
+        <p>
+          Arancia
+        </p>
+        <p>
+          2+ ciliegie
+        </p>
+        <button>
+          Change language
+        </button>
+      </div>
+    `);
+
+    fireEvent.click(getByText(/change/i));
+
+    // fallbackLanguage is "en"
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          Pear
+        </p>
+        <p>
+          Orange
+        </p>
+        <p>
+          2+ strawberries
+        </p>
+        <button>
+          Change language
+        </button>
+      </div>
+    `);
   });
 });

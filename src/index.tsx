@@ -12,12 +12,14 @@ export type Translations = { [key: string]: Translation | Translations };
 type Dispatch = (language: string) => void;
 type TranslateProviderProps = {
   defaultLanguage?: string;
+  fallbackLanguage?: string;
   translations: Translations;
   children: React.ReactNode;
 };
 type State = {
   language: string;
   translations: Translations;
+  fallbackLanguage?: string;
 };
 
 const TranslateStateContext = React.createContext<State | undefined>(undefined);
@@ -27,6 +29,7 @@ const TranslateDispatchContext = React.createContext<Dispatch | undefined>(
 
 function TranslateProvider({
   defaultLanguage,
+  fallbackLanguage,
   translations,
   children,
 }: TranslateProviderProps) {
@@ -34,7 +37,9 @@ function TranslateProvider({
   const [language, setLanguage] = React.useState(defaultLanguage);
 
   return (
-    <TranslateStateContext.Provider value={{ language, translations }}>
+    <TranslateStateContext.Provider
+      value={{ language, translations, fallbackLanguage }}
+    >
       <TranslateDispatchContext.Provider value={setLanguage}>
         {children}
       </TranslateDispatchContext.Provider>
@@ -68,7 +73,7 @@ type TranslateParams = {
 };
 
 function useTranslate() {
-  const { language, translations } = useTranslateState();
+  const { language, translations, fallbackLanguage } = useTranslateState();
   const setLanguage = useTranslateDispatch();
 
   function withPrefix(prefix: string) {
@@ -79,21 +84,35 @@ function useTranslate() {
 
   function t(id: string, params?: TranslateParams): string {
     const p = params?.prefix ? params.prefix + '.' : '';
-    const translation = get(translations, p + id);
+    const translationObject = get(translations, p + id);
+    let translation: string | undefined = undefined;
 
-    if (isTranslation(translation, language)) {
-      if (isTranslationBase(translation, language)) {
-        return checkValueThenReturn(translation[language], id);
+    if (isTranslation(translationObject, language)) {
+      if (isTranslationBase(translationObject, language)) {
+        translation = translationObject[language];
       } else if (params?.count && params.count > 1) {
-        return checkValueThenReturn(translation[language][1], id);
+        translation = translationObject[language][1];
       } else if (params?.count === 0) {
-        return checkValueThenReturn(translation[language][2], id);
+        translation = translationObject[language][2];
       } else {
-        return checkValueThenReturn(translation[language][0], id);
+        translation = translationObject[language][0];
+      }
+    } else if (
+      fallbackLanguage &&
+      isTranslation(translationObject, fallbackLanguage)
+    ) {
+      if (isTranslationBase(translationObject, fallbackLanguage)) {
+        translation = translationObject[fallbackLanguage];
+      } else if (params?.count && params.count > 1) {
+        translation = translationObject[fallbackLanguage][1];
+      } else if (params?.count === 0) {
+        translation = translationObject[fallbackLanguage][2];
+      } else {
+        translation = translationObject[fallbackLanguage][0];
       }
     }
 
-    return checkValueThenReturn(undefined, id);
+    return checkValueThenReturn(translation, id);
   }
 
   return { t, withPrefix, setLanguage, language };
