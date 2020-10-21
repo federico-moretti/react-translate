@@ -5,8 +5,6 @@ import { renderHook, act } from '@testing-library/react-hooks';
 import { T, useTranslate, TranslateProvider, mergeTranslations } from '../src';
 import { translations } from './data';
 
-const consoleSpy = jest.spyOn(global.console, 'warn');
-
 function Sub({ id }: { id: string }) {
   const { withPrefix } = useTranslate();
   const t = withPrefix('sub');
@@ -18,11 +16,20 @@ function ChangeLanguage({ language }: { language: string }) {
   return <button onClick={() => setLanguage(language)}>Change language</button>;
 }
 
-function Provider({ children }: { children?: React.ReactNode }) {
+function Provider({
+  children,
+  fallbackLanguage,
+  suppressWarnings,
+}: {
+  children?: React.ReactNode;
+  fallbackLanguage?: string;
+  suppressWarnings?: boolean;
+}): React.ReactElement {
   return (
     <TranslateProvider
       defaultLanguage="it"
-      fallbackLanguage="en"
+      fallbackLanguage={fallbackLanguage ?? 'en'}
+      suppressWarnings={suppressWarnings}
       translations={translations}
     >
       {children}
@@ -128,6 +135,8 @@ describe('Translate', () => {
   });
 
   it('translates with missing id', () => {
+    const consoleSpy = jest.spyOn(global.console, 'warn');
+
     const { container } = render(
       <>
         <T type="p" id="sub.apple" count={5} />
@@ -137,7 +146,34 @@ describe('Translate', () => {
     expect(consoleSpy).toHaveBeenCalledWith(
       '[Translate] Missing id: sub.apple'
     );
+
     consoleSpy.mockReset();
+    consoleSpy.mockRestore();
+
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          sub.apple
+        </p>
+      </div>
+    `);
+  });
+
+  it('translates with missing id but suppressed warnings', () => {
+    const consoleSpy = jest.spyOn(global.console, 'warn');
+
+    const { container } = baseRender(
+      <Provider suppressWarnings>
+        <T type="p" id="sub.apple" count={5} />
+      </Provider>
+    );
+
+    expect(consoleSpy).not.toHaveBeenCalledWith(
+      '[Translate] Missing id: sub.apple'
+    );
+
+    consoleSpy.mockReset();
+    consoleSpy.mockRestore();
 
     expect(container).toMatchInlineSnapshot(`
       <div>
@@ -243,7 +279,7 @@ describe('Translate', () => {
     expect(merged.sub.strawberry.en[2]).toBe('0 strawberry');
   });
 
-  it('fallbacks if there is are translations', () => {
+  it('translate with fallbackLanguage', () => {
     const { container, getByText } = render(
       <>
         <T type="p" id="pear" />

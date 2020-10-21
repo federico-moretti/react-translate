@@ -11,15 +11,17 @@ export type Translations = { [key: string]: Translation | Translations };
 
 type Dispatch = (language: string) => void;
 type TranslateProviderProps = {
-  defaultLanguage?: string;
-  fallbackLanguage?: string;
   translations: Translations;
   children: React.ReactNode;
+  fallbackLanguage?: string;
+  defaultLanguage?: string;
+  suppressWarnings?: boolean;
 };
 type State = {
   language: string;
   translations: Translations;
   fallbackLanguage?: string;
+  suppressWarnings?: boolean;
 };
 
 const TranslateStateContext = React.createContext<State | undefined>(undefined);
@@ -30,6 +32,7 @@ const TranslateDispatchContext = React.createContext<Dispatch | undefined>(
 function TranslateProvider({
   defaultLanguage,
   fallbackLanguage,
+  suppressWarnings,
   translations,
   children,
 }: TranslateProviderProps) {
@@ -38,7 +41,7 @@ function TranslateProvider({
 
   return (
     <TranslateStateContext.Provider
-      value={{ language, translations, fallbackLanguage }}
+      value={{ language, translations, fallbackLanguage, suppressWarnings }}
     >
       <TranslateDispatchContext.Provider value={setLanguage}>
         {children}
@@ -73,7 +76,12 @@ type TranslateParams = {
 };
 
 function useTranslate() {
-  const { language, translations, fallbackLanguage } = useTranslateState();
+  const {
+    language,
+    translations,
+    fallbackLanguage,
+    suppressWarnings,
+  } = useTranslateState();
   const setLanguage = useTranslateDispatch();
 
   function withPrefix(prefix: string) {
@@ -112,15 +120,19 @@ function useTranslate() {
       }
     }
 
-    return checkValueThenReturn(translation, id);
+    return checkValueThenReturn(translation, id, suppressWarnings);
   }
 
   return { t, withPrefix, setLanguage, language };
 }
 
-function checkValueThenReturn(t: undefined | string, id: string) {
+function checkValueThenReturn(
+  t: undefined | string,
+  id: string,
+  suppressWarnings?: boolean
+) {
   if (t) return t;
-  console.warn(`[Translate] Missing id: ${id}`);
+  if (!suppressWarnings) console.warn(`[Translate] Missing id: ${id}`);
   return id;
 }
 
