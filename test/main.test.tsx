@@ -20,16 +20,19 @@ function Provider({
   children,
   fallbackLanguage,
   suppressWarnings,
+  showIds,
 }: {
   children?: React.ReactNode;
   fallbackLanguage?: string;
   suppressWarnings?: boolean;
+  showIds?: boolean;
 }): React.ReactElement {
   return (
     <TranslateProvider
       defaultLanguage="it"
       fallbackLanguage={fallbackLanguage ?? 'en'}
       suppressWarnings={suppressWarnings}
+      showIds={showIds}
       translations={translations}
     >
       {children}
@@ -88,7 +91,7 @@ describe('Translate', () => {
     expect(container).toMatchInlineSnapshot(`
       <div>
         <p>
-          1 ciliegia
+          1 fragola
         </p>
         <p>
           Arancia
@@ -114,7 +117,7 @@ describe('Translate', () => {
           Mele
         </p>
         <p>
-          2+ ciliegie
+          2+ fragole
         </p>
       </div>
     `);
@@ -128,7 +131,7 @@ describe('Translate', () => {
     expect(container).toMatchInlineSnapshot(`
       <div>
         <p>
-          0 ciliegie
+          0 fragole
         </p>
       </div>
     `);
@@ -203,7 +206,7 @@ describe('Translate', () => {
           Arancia
         </p>
         <p>
-          2+ ciliegie
+          2+ fragole
         </p>
         <button>
           Change language
@@ -252,17 +255,25 @@ describe('Translate', () => {
   it('merges 2 translations', () => {
     const translationsEn: Record<string, any> = {
       pear: 'Pear',
-      apple: ['Apple', 'Apples'],
+      banana: ['Banana', 'Bananas'],
       sub: {
         strawberry: ['1 strawberry', '2+ strawberries', '0 strawberry'],
+        apple: {
+          gala: 'Apple Gala',
+          golden: 'Apple Golden',
+        },
       },
     };
 
     const translationsIt: Record<string, any> = {
       pear: 'Pera',
-      apple: ['Mela', 'Mele'],
+      banana: ['Banana', 'Banane'],
       sub: {
-        strawberry: ['1 ciliegia', '2+ ciliegie', '0 ciliegie'],
+        strawberry: ['1 fragola', '2+ fragole', '0 fragole'],
+        apple: {
+          gala: 'Mela Gala',
+          golden: 'Mela Golden',
+        },
       },
     };
 
@@ -273,10 +284,12 @@ describe('Translate', () => {
 
     expect(merged.pear.it).toBe('Pera');
     expect(merged.pear.en).toBe('Pear');
-    expect(merged.apple.it[0]).toBe('Mela');
-    expect(merged.apple.en[0]).toBe('Apple');
-    expect(merged.sub.strawberry.it[2]).toBe('0 ciliegie');
+    expect(merged.banana.it[1]).toBe('Banane');
+    expect(merged.banana.en[1]).toBe('Bananas');
+    expect(merged.sub.strawberry.it[2]).toBe('0 fragole');
     expect(merged.sub.strawberry.en[2]).toBe('0 strawberry');
+    expect(merged.sub.apple.gala.it).toBe('Mela Gala');
+    expect(merged.sub.apple.gala.en).toBe('Apple Gala');
   });
 
   it('translate with fallbackLanguage', () => {
@@ -284,6 +297,8 @@ describe('Translate', () => {
       <>
         <T type="p" id="pear" />
         <T type="p" id="sub.orange" />
+        <T type="p" prefix="sub" id="strawberry" count={0} />
+        <T type="p" prefix="sub" id="strawberry" count={1} />
         <T type="p" prefix="sub" id="strawberry" count={10} />
         <ChangeLanguage language="de" />
       </>
@@ -298,7 +313,13 @@ describe('Translate', () => {
           Arancia
         </p>
         <p>
-          2+ ciliegie
+          0 fragole
+        </p>
+        <p>
+          1 fragola
+        </p>
+        <p>
+          2+ fragole
         </p>
         <button>
           Change language
@@ -318,6 +339,12 @@ describe('Translate', () => {
           Orange
         </p>
         <p>
+          0 strawberries
+        </p>
+        <p>
+          1 strawberry
+        </p>
+        <p>
           2+ strawberries
         </p>
         <button>
@@ -325,5 +352,46 @@ describe('Translate', () => {
         </button>
       </div>
     `);
+  });
+
+  it('translates with showIds toggled', () => {
+    const { container } = baseRender(
+      <Provider showIds>
+        <T type="p" id="apple" />
+        <T type="p" id="apple" count={0} />
+        <T type="p" id="apple" count={5} />
+        <Sub id="strawberry" />
+      </Provider>
+    );
+
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          apple
+        </p>
+        <p>
+          apple - count: 0
+        </p>
+        <p>
+          apple - count: 5
+        </p>
+        <p>
+          sub.strawberry
+        </p>
+      </div>
+    `);
+  });
+
+  it('throw error for missing state provider', () => {
+    expect(() => {
+      baseRender(
+        <>
+          <T type="p" id="apple" />
+          <T type="p" id="apple" count={0} />
+          <T type="p" id="apple" count={5} />
+          <Sub id="strawberry" />
+        </>
+      );
+    }).toThrow('useTranslateState must be used within a TranslateProvider');
   });
 });

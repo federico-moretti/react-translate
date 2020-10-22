@@ -26,7 +26,7 @@ export const translations = {
     },
     strawberry: {
       en: ['1 strawberry', '2+ strawberries', '0 strawberries'],
-      it: ['1 ciliegia', '2+ ciliegie', '0 ciliegie'],
+      it: ['1 fragola', '2+ fragole', '0 fragole'],
     },
   },
 };
