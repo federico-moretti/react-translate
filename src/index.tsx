@@ -16,12 +16,14 @@ type TranslateProviderProps = {
   fallbackLanguage?: string;
   defaultLanguage?: string;
   suppressWarnings?: boolean;
+  showIds?: boolean;
 };
 type State = {
   language: string;
   translations: Translations;
   fallbackLanguage?: string;
   suppressWarnings?: boolean;
+  showIds?: boolean;
 };
 
 const TranslateStateContext = React.createContext<State | undefined>(undefined);
@@ -33,6 +35,7 @@ function TranslateProvider({
   defaultLanguage,
   fallbackLanguage,
   suppressWarnings,
+  showIds,
   translations,
   children,
 }: TranslateProviderProps) {
@@ -41,7 +44,13 @@ function TranslateProvider({
 
   return (
     <TranslateStateContext.Provider
-      value={{ language, translations, fallbackLanguage, suppressWarnings }}
+      value={{
+        language,
+        translations,
+        fallbackLanguage,
+        suppressWarnings,
+        showIds,
+      }}
     >
       <TranslateDispatchContext.Provider value={setLanguage}>
         {children}
@@ -81,6 +90,7 @@ function useTranslate() {
     translations,
     fallbackLanguage,
     suppressWarnings,
+    showIds,
   } = useTranslateState();
   const setLanguage = useTranslateDispatch();
 
@@ -92,6 +102,13 @@ function useTranslate() {
 
   function t(id: string, params?: TranslateParams): string {
     const p = params?.prefix ? params.prefix + '.' : '';
+
+    if (showIds) {
+      const count =
+        params?.count !== undefined ? ` - count: ${params.count}` : '';
+      return `${p}${id}${count}`;
+    }
+
     const translationObject = get(translations, p + id);
     let translation: string | undefined = undefined;
 
