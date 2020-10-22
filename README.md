@@ -8,13 +8,11 @@ Translate your React app without any hassle and with no setup!
 - Translate component
 - Allow nested translations
 - Singular, plural and zero based on count
-- Lightweight (~2KB minified)
+- Lightweight (~3KB)
 - Built with TypeScript
-- ~95% code coverage
+- ~99% code coverage
 
 ## Installing
-
-Import as a module
 
 ```bash
 npm install @federico.moretti/react-translate
@@ -78,6 +76,8 @@ ReactDOM.render(
 );
 ```
 
+[CodeSandbox](https://codesandbox.io/s/react-translate-nw1y6?file=/src/index.tsx)
+
 ## API
 
 #### `t(id: string, params?: TranslateParams): string`
@@ -90,15 +90,15 @@ It returns the translation as a string.
   - `count?: number`
     - select singular, plural or zero
   - `prefix?: string`
-    - allows to get to nested translations
+    - allows to always get nested translations
 
 #### `setLanguage(language: string): void`
 
-Changes the language.
+It changes the language in the provider.
 
 #### `withPrefix(prefix: string): function`
 
-It returns `t(id: string, params: { count: number }): string`
+It returns `t()` with the prefix already added.
 
 This is useful if you have to use a lot of translations with the same prefix, for example in a page.
 
@@ -113,7 +113,7 @@ Creates a text node (or another element) with the translation.
 
 - `id: string`
 - `type: keyof React.ReactHTML`
-  - if `type` equals `p` it will return `<p>translation</p>`
+  - if `type` equals `p` it will return `<p>your translation</p>`
 - `prefix: string`
 - `count: number`
 
@@ -121,11 +121,19 @@ Creates a text node (or another element) with the translation.
 
 Wrap the app with the provider.
 
-- `language: string`
-  - example: `it`
-  - defaults to browser language
+- `defaultLanguage: string`
+  - it defaults to browser language if undefined
+  - example: `it-IT`
 - `translations: Translations`
+  - the translations object
   - required
+- `fallbackLanguage: string`
+  - if a translation is missing this language will be used
+  - example: `en-GB`
+- `suppressWarnings: boolean`
+  - hides the warnings in the console
+- `showIds: boolean`
+  - show translation ids
 
 #### Translation object
 
@@ -152,11 +160,42 @@ const translations = {
 };
 ```
 
+#### mergeTranslations(array: { language: string; translations: TranslationsWithoutLanguage; }[]) : Translations
+
+A function to merge different language files.
+
+```js
+const translationsEn = {
+  pear: 'Pear',
+  banana: ['Banana', 'Bananas'],
+};
+
+const translationsIt = {
+  pear: 'Pera',
+  banana: ['Banana', 'Banane'],
+};
+
+const merged = mergeTranslations([
+  { language: 'it', translations: translationsIt },
+  { language: 'en', translations: translationsEn },
+]);
+
+/* this is how the result will be
+{
+  pear: { it: 'Pera', en: 'Pear' },
+  banana: {
+    it: ['Banana', 'Banane'],
+    en: ['Banana', 'Bananas'],
+  },
+};
+*/
+```
+
 ## Coverage
 
 | File      | % Stmts | % Branch | % Funcs | % Lines |
 | --------- | ------- | -------- | ------- | ------- |
-| All files | 96.23   | 90.32    | 100     | 95.45   |
+| All files | 98.88   | 88.46    | 100     | 98.67   |
 
 ## Licence
 
