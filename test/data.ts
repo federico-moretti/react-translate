@@ -7,6 +7,9 @@ export const translations = {
     it: ['Mela', 'Mele'],
     en: ['Apple', 'Apples'],
   },
+  banana: {
+    it: 'Banana',
+  },
   vegetable: {
     root: {
       carrot: {

@@ -5,10 +5,24 @@ import { renderHook, act } from '@testing-library/react-hooks';
 import { T, useTranslate, TranslateProvider, mergeTranslations } from '../src';
 import { translations } from './data';
 
-function Sub({ id }: { id: string }) {
+jest.useFakeTimers();
+
+// avoid errors spam
+global.console.error = jest.fn();
+
+function TBase(props: { id: string; count?: number; prefix?: string }) {
+  const { id, count, prefix } = props;
+  const params = count || prefix ? { count, prefix } : undefined;
+  const { t } = useTranslate();
+  return <>{t(id, params)}</>;
+}
+
+function TWithPrefix(props: { id: string; count?: number }) {
   const { withPrefix } = useTranslate();
+  const { id, count } = props;
+  const params = count ? { count } : undefined;
   const t = withPrefix('sub');
-  return <p>{t(id)}</p>;
+  return <p>{t(id, params)}</p>;
 }
 
 function ChangeLanguage({ language }: { language: string }) {
@@ -23,14 +37,21 @@ function Provider({
   showIds,
 }: {
   children?: React.ReactNode;
-  fallbackLanguage?: string;
+  fallbackLanguage?: string | null;
   suppressWarnings?: boolean;
   showIds?: boolean;
 }): React.ReactElement {
+  const fallback =
+    fallbackLanguage === null
+      ? undefined
+      : fallbackLanguage
+      ? fallbackLanguage
+      : 'en';
+
   return (
     <TranslateProvider
       defaultLanguage="it"
-      fallbackLanguage={fallbackLanguage ?? 'en'}
+      fallbackLanguage={fallback}
       suppressWarnings={suppressWarnings}
       showIds={showIds}
       translations={translations}
@@ -48,7 +69,7 @@ describe('Translate', () => {
   it('translates simple text', () => {
     const { container } = render(
       <p>
-        <T id="pear" />
+        <TBase id="pear" />
       </p>
     );
 
@@ -65,7 +86,7 @@ describe('Translate', () => {
     const { container } = render(
       <p>
         <T id="vegetable.root.carrot" />
-        <T prefix="vegetable.root" id="carrot" />
+        <TBase prefix="vegetable.root" id="carrot" />
       </p>
     );
 
@@ -84,7 +105,7 @@ describe('Translate', () => {
       <>
         <T type="p" id="sub.strawberry" />
         <T type="p" prefix="sub" id="orange" />
-        <Sub id="cantaloupe" />
+        <TWithPrefix id="cantaloupe" />
       </>
     );
 
@@ -140,14 +161,41 @@ describe('Translate', () => {
   it('translates with missing id', () => {
     const consoleSpy = jest.spyOn(global.console, 'warn');
 
+    const { container } = baseRender(
+      <Provider fallbackLanguage={null}>
+        <T type="p" id="sub.apple" count={6} />
+      </Provider>
+    );
+
+    jest.runAllTimers();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      '[T] Missing id: sub.apple (n. 6)(it)'
+    );
+
+    consoleSpy.mockReset();
+    consoleSpy.mockRestore();
+
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          sub.apple
+        </p>
+      </div>
+    `);
+  });
+
+  it('translates with missing id but with fallback', () => {
+    const consoleSpy = jest.spyOn(global.console, 'warn');
+
     const { container } = render(
       <>
-        <T type="p" id="sub.apple" count={5} />
+        <T type="p" id="sub.apple" count={6} />
       </>
     );
 
+    jest.runAllTimers();
     expect(consoleSpy).toHaveBeenCalledWith(
-      '[Translate] Missing id: sub.apple'
+      '[T] Missing id and fallback: sub.apple (n. 6)(it - en)'
     );
 
     consoleSpy.mockReset();
@@ -167,13 +215,12 @@ describe('Translate', () => {
 
     const { container } = baseRender(
       <Provider suppressWarnings>
-        <T type="p" id="sub.apple" count={5} />
+        <T type="p" id="sub.apple" count={8} />
       </Provider>
     );
 
-    expect(consoleSpy).not.toHaveBeenCalledWith(
-      '[Translate] Missing id: sub.apple'
-    );
+    jest.runAllTimers();
+    expect(consoleSpy).not.toHaveBeenCalled();
 
     consoleSpy.mockReset();
     consoleSpy.mockRestore();
@@ -293,9 +340,12 @@ describe('Translate', () => {
   });
 
   it('translate with fallbackLanguage', () => {
+    const consoleSpy = jest.spyOn(global.console, 'warn');
+
     const { container, getByText } = render(
       <>
         <T type="p" id="pear" />
+        <T type="p" id="banana" />
         <T type="p" id="sub.orange" />
         <T type="p" prefix="sub" id="strawberry" count={0} />
         <T type="p" prefix="sub" id="strawberry" count={1} />
@@ -304,10 +354,14 @@ describe('Translate', () => {
       </>
     );
 
+    // default language is italian
     expect(container).toMatchInlineSnapshot(`
       <div>
         <p>
           Pera
+        </p>
+        <p>
+          Banana
         </p>
         <p>
           Arancia
@@ -329,11 +383,14 @@ describe('Translate', () => {
 
     fireEvent.click(getByText(/change/i));
 
-    // fallbackLanguage is "en"
+    // fallback language is english
     expect(container).toMatchInlineSnapshot(`
       <div>
         <p>
           Pear
+        </p>
+        <p>
+          banana
         </p>
         <p>
           Orange
@@ -352,6 +409,36 @@ describe('Translate', () => {
         </button>
       </div>
     `);
+
+    jest.runAllTimers();
+    expect(consoleSpy).toHaveBeenCalledTimes(6);
+    expect(consoleSpy).toHaveBeenNthCalledWith(
+      1,
+      '[T] Missing id but using fallback: pear (de)'
+    );
+    expect(consoleSpy).toHaveBeenNthCalledWith(
+      2,
+      '[T] Missing id and fallback: banana (de - en)'
+    );
+    expect(consoleSpy).toHaveBeenNthCalledWith(
+      3,
+      '[T] Missing id but using fallback: sub.orange (de)'
+    );
+    expect(consoleSpy).toHaveBeenNthCalledWith(
+      4,
+      '[T] Missing id but using fallback: strawberry (n. 0)(de)'
+    );
+    expect(consoleSpy).toHaveBeenNthCalledWith(
+      5,
+      '[T] Missing id but using fallback: strawberry (n. 1)(de)'
+    );
+    expect(consoleSpy).toHaveBeenNthCalledWith(
+      6,
+      '[T] Missing id but using fallback: strawberry (n. 10)(de)'
+    );
+
+    consoleSpy.mockReset();
+    consoleSpy.mockRestore();
   });
 
   it('translates with showIds toggled', () => {
@@ -360,7 +447,7 @@ describe('Translate', () => {
         <T type="p" id="apple" />
         <T type="p" id="apple" count={0} />
         <T type="p" id="apple" count={5} />
-        <Sub id="strawberry" />
+        <TWithPrefix id="strawberry" />
       </Provider>
     );
 
@@ -370,10 +457,10 @@ describe('Translate', () => {
           apple
         </p>
         <p>
-          apple - count: 0
+          apple (n. 0)
         </p>
         <p>
-          apple - count: 5
+          apple (n. 5)
         </p>
         <p>
           sub.strawberry
@@ -389,7 +476,7 @@ describe('Translate', () => {
           <T type="p" id="apple" />
           <T type="p" id="apple" count={0} />
           <T type="p" id="apple" count={5} />
-          <Sub id="strawberry" />
+          <TWithPrefix id="strawberry" />
         </>
       );
     }).toThrow('useTranslateState must be used within a TranslateProvider');

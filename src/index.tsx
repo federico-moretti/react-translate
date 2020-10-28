@@ -104,13 +104,13 @@ function useTranslate() {
     const p = params?.prefix ? params.prefix + '.' : '';
 
     if (showIds) {
-      const count =
-        params?.count !== undefined ? ` - count: ${params.count}` : '';
+      const count = params?.count !== undefined ? ` (n. ${params.count})` : '';
       return `${p}${id}${count}`;
     }
 
     const translationObject = get(translations, p + id);
     let translation: string | undefined = undefined;
+    let usingFallbackLanguage = false;
 
     if (isTranslation(translationObject, language)) {
       if (isTranslationBase(translationObject, language)) {
@@ -122,35 +122,63 @@ function useTranslate() {
       } else {
         translation = translationObject[language][0];
       }
-    } else if (
-      fallbackLanguage &&
-      isTranslation(translationObject, fallbackLanguage)
-    ) {
-      if (isTranslationBase(translationObject, fallbackLanguage)) {
-        translation = translationObject[fallbackLanguage];
-      } else if (params?.count && params.count > 1) {
-        translation = translationObject[fallbackLanguage][1];
-      } else if (params?.count === 0) {
-        translation = translationObject[fallbackLanguage][2];
-      } else {
-        translation = translationObject[fallbackLanguage][0];
+    } else if (fallbackLanguage) {
+      usingFallbackLanguage = true;
+      if (isTranslation(translationObject, fallbackLanguage)) {
+        if (isTranslationBase(translationObject, fallbackLanguage)) {
+          translation = translationObject[fallbackLanguage];
+        } else if (params?.count && params.count > 1) {
+          translation = translationObject[fallbackLanguage][1];
+        } else if (params?.count === 0) {
+          translation = translationObject[fallbackLanguage][2];
+        } else {
+          translation = translationObject[fallbackLanguage][0];
+        }
       }
     }
 
-    return checkValueThenReturn(translation, id, suppressWarnings);
+    checkForWarnings(
+      translation,
+      id,
+      language,
+      usingFallbackLanguage,
+      params?.count,
+      fallbackLanguage,
+      suppressWarnings
+    );
+    return translation ?? id;
   }
 
   return { t, withPrefix, setLanguage, language };
 }
 
-function checkValueThenReturn(
+function checkForWarnings(
   t: undefined | string,
   id: string,
+  language: string,
+  usingFallbackLanguage: boolean,
+  count?: number,
+  fallbackLanguage?: string,
   suppressWarnings?: boolean
 ) {
-  if (t) return t;
-  if (!suppressWarnings) console.warn(`[Translate] Missing id: ${id}`);
-  return id;
+  setTimeout(() => {
+    if (!suppressWarnings) {
+      const countString = count !== undefined ? `(n. ${count})` : '';
+
+      if (t && usingFallbackLanguage) {
+        console.warn(
+          `[T] Missing id but using fallback: ${id} ${countString}(${language})`
+        );
+      }
+      if (!t && usingFallbackLanguage) {
+        console.warn(
+          `[T] Missing id and fallback: ${id} ${countString}(${language} - ${fallbackLanguage})`
+        );
+      } else if (!t) {
+        console.warn(`[T] Missing id: ${id} ${countString}(${language})`);
+      }
+    }
+  }, 0);
 }
 
 function isTranslationBase(
