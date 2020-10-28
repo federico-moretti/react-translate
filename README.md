@@ -160,9 +160,14 @@ const translations = {
 };
 ```
 
-#### mergeTranslations(array: { language: string; translations: TranslationsWithoutLanguage; }[]) : Translations
+#### mergeTranslations(array): Translations
 
 A function to merge different language files.
+
+#### mergeTranslations(array): Translations
+
+- `array: { language: string; translations: TranslationsWithoutLanguage }[]`
+  - it will merge the translation using the language
 
 ```js
 const translationsEn = {
@@ -195,7 +200,7 @@ const merged = mergeTranslations([
 
 | File      | % Stmts | % Branch | % Funcs | % Lines |
 | --------- | ------- | -------- | ------- | ------- |
-| All files | 98.88   | 88.46    | 100     | 98.67   |
+| All files | 98.97   | 91.67    | 100     | 98.82   |
 
 ## Licence
 
