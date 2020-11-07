@@ -117,6 +117,9 @@ function useTranslate() {
         translation = translationObject[language];
       } else if (params?.count && params.count > 1) {
         translation = translationObject[language][1];
+        if (translation.includes('%n')) {
+          translation = translation.replace(/%n/g, params.count.toString());
+        }
       } else if (params?.count === 0) {
         translation = translationObject[language][2];
       } else {
@@ -129,6 +132,9 @@ function useTranslate() {
           translation = translationObject[fallbackLanguage];
         } else if (params?.count && params.count > 1) {
           translation = translationObject[fallbackLanguage][1];
+          if (translation.includes('%n')) {
+            translation = translation.replace(/%n/g, params.count.toString());
+          }
         } else if (params?.count === 0) {
           translation = translationObject[fallbackLanguage][2];
         } else {
@@ -185,11 +191,11 @@ function isTranslationBase(
   object: any,
   language: string
 ): object is TranslationBase {
-  return Boolean(object) && typeof object[language] === 'string';
+  return object && typeof object[language] === 'string';
 }
 
 function isTranslation(object: any, language: string): object is Translation {
-  return Boolean(object?.[language]);
+  return object?.[language];
 }
 
 type TProps = {

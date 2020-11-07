@@ -28,8 +28,8 @@ export const translations = {
       en: 'Cantaloupe',
     },
     strawberry: {
-      en: ['1 strawberry', '2+ strawberries', '0 strawberries'],
-      it: ['1 fragola', '2+ fragole', '0 fragole'],
+      en: ['1 strawberry', '%n strawberries', '0 strawberries'],
+      it: ['1 fragola', '%n fragole', '0 fragole'],
     },
   },
 };

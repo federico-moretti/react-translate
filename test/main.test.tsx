@@ -138,7 +138,7 @@ describe('Translate', () => {
           Mele
         </p>
         <p>
-          2+ fragole
+          10 fragole
         </p>
       </div>
     `);
@@ -253,7 +253,7 @@ describe('Translate', () => {
           Arancia
         </p>
         <p>
-          2+ fragole
+          10 fragole
         </p>
         <button>
           Change language
@@ -272,7 +272,7 @@ describe('Translate', () => {
           Orange
         </p>
         <p>
-          2+ strawberries
+          10 strawberries
         </p>
         <button>
           Change language
@@ -304,7 +304,7 @@ describe('Translate', () => {
       pear: 'Pear',
       banana: ['Banana', 'Bananas'],
       sub: {
-        strawberry: ['1 strawberry', '2+ strawberries', '0 strawberry'],
+        strawberry: ['1 strawberry', '%n strawberries', '0 strawberry'],
         apple: {
           gala: 'Apple Gala',
           golden: 'Apple Golden',
@@ -316,7 +316,7 @@ describe('Translate', () => {
       pear: 'Pera',
       banana: ['Banana', 'Banane'],
       sub: {
-        strawberry: ['1 fragola', '2+ fragole', '0 fragole'],
+        strawberry: ['1 fragola', '%n fragole', '0 fragole'],
         apple: {
           gala: 'Mela Gala',
           golden: 'Mela Golden',
@@ -373,7 +373,7 @@ describe('Translate', () => {
           1 fragola
         </p>
         <p>
-          2+ fragole
+          10 fragole
         </p>
         <button>
           Change language
@@ -402,7 +402,7 @@ describe('Translate', () => {
           1 strawberry
         </p>
         <p>
-          2+ strawberries
+          10 strawberries
         </p>
         <button>
           Change language

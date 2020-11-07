@@ -43,8 +43,8 @@ const translations = {
   },
   sub: {
     strawberry: {
-      en: ['1 strawberry', '2+ strawberries', '0 strawberries'],
-      it: ['1 ciliegia', '2+ ciliegie', '0 ciliegie'],
+      en: ['1 strawberry', '%n strawberries', '0 strawberries'],
+      it: ['1 ciliegia', '%n ciliegie', '0 ciliegie'],
     },
   },
 };
@@ -89,6 +89,7 @@ It returns the translation as a string.
 - `params`:
   - `count?: number`
     - select singular, plural or zero
+    - if plural `%n` in a string will be replaced with the `count`
   - `prefix?: string`
     - allows to always get nested translations
 
@@ -153,8 +154,8 @@ const translations = {
   sub: {
     strawberry: {
       // [1, 2+, 0]
-      en: ['1 strawberry', '2+ strawberries', '0 strawberries'],
-      it: ['1 ciliegia', '2+ ciliegie', '0 ciliegie'],
+      en: ['1 strawberry', '%n strawberries', '0 strawberries'],
+      it: ['1 ciliegia', '%n ciliegie', '0 ciliegie'],
     },
   },
 };
