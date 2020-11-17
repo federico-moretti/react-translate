@@ -145,14 +145,14 @@ function useTranslate() {
 
     checkForWarnings(
       translation,
-      id,
+      p + id,
       language,
       usingFallbackLanguage,
       params?.count,
       fallbackLanguage,
       suppressWarnings
     );
-    return translation ?? id;
+    return translation ?? p + id;
   }
 
   return { t, withPrefix, setLanguage, language };

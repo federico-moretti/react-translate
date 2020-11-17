@@ -426,15 +426,15 @@ describe('Translate', () => {
     );
     expect(consoleSpy).toHaveBeenNthCalledWith(
       4,
-      '[T] Missing id but using fallback: strawberry (n. 0)(de)'
+      '[T] Missing id but using fallback: sub.strawberry (n. 0)(de)'
     );
     expect(consoleSpy).toHaveBeenNthCalledWith(
       5,
-      '[T] Missing id but using fallback: strawberry (n. 1)(de)'
+      '[T] Missing id but using fallback: sub.strawberry (n. 1)(de)'
     );
     expect(consoleSpy).toHaveBeenNthCalledWith(
       6,
-      '[T] Missing id but using fallback: strawberry (n. 10)(de)'
+      '[T] Missing id but using fallback: sub.strawberry (n. 10)(de)'
     );
 
     consoleSpy.mockReset();
@@ -446,7 +446,7 @@ describe('Translate', () => {
       <Provider showIds>
         <T type="p" id="apple" />
         <T type="p" id="apple" count={0} />
-        <T type="p" id="apple" count={5} />
+        <T type="p" prefix="sub" id="apple" count={5} />
         <TWithPrefix id="strawberry" />
       </Provider>
     );
@@ -460,7 +460,7 @@ describe('Translate', () => {
           apple (n. 0)
         </p>
         <p>
-          apple (n. 5)
+          sub.apple (n. 5)
         </p>
         <p>
           sub.strawberry
