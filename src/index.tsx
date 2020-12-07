@@ -84,6 +84,79 @@ type TranslateParams = {
   prefix?: string;
 };
 
+type TranslateFunctionParams = {
+  id: string;
+  language: string;
+  translations: Translations;
+  params?: TranslateParams;
+  fallbackLanguage?: string;
+  suppressWarnings?: boolean;
+  showIds?: boolean;
+};
+
+function translate({
+  id,
+  language,
+  translations,
+  params,
+  fallbackLanguage,
+  suppressWarnings,
+  showIds,
+}: TranslateFunctionParams) {
+  const p = params?.prefix ? params.prefix + '.' : '';
+
+  if (showIds) {
+    const count = params?.count !== undefined ? ` (n. ${params.count})` : '';
+    return `${p}${id}${count}`;
+  }
+
+  const translationObject = get(translations, p + id);
+  let translation: string | undefined = undefined;
+  let usingFallbackLanguage = false;
+
+  if (isTranslation(translationObject, language)) {
+    if (isTranslationBase(translationObject, language)) {
+      translation = translationObject[language];
+    } else if (params?.count && params.count > 1) {
+      translation = translationObject[language][1];
+      if (translation.includes('%n')) {
+        translation = translation.replace(/%n/g, params.count.toString());
+      }
+    } else if (params?.count === 0) {
+      translation = translationObject[language][2];
+    } else {
+      translation = translationObject[language][0];
+    }
+  } else if (fallbackLanguage) {
+    usingFallbackLanguage = true;
+    if (isTranslation(translationObject, fallbackLanguage)) {
+      if (isTranslationBase(translationObject, fallbackLanguage)) {
+        translation = translationObject[fallbackLanguage];
+      } else if (params?.count && params.count > 1) {
+        translation = translationObject[fallbackLanguage][1];
+        if (translation.includes('%n')) {
+          translation = translation.replace(/%n/g, params.count.toString());
+        }
+      } else if (params?.count === 0) {
+        translation = translationObject[fallbackLanguage][2];
+      } else {
+        translation = translationObject[fallbackLanguage][0];
+      }
+    }
+  }
+
+  checkForWarnings(
+    translation,
+    p + id,
+    language,
+    usingFallbackLanguage,
+    params?.count,
+    fallbackLanguage,
+    suppressWarnings
+  );
+  return translation ?? p + id;
+}
+
 function useTranslate() {
   const {
     language,
@@ -101,58 +174,15 @@ function useTranslate() {
   }
 
   function t(id: string, params?: TranslateParams): string {
-    const p = params?.prefix ? params.prefix + '.' : '';
-
-    if (showIds) {
-      const count = params?.count !== undefined ? ` (n. ${params.count})` : '';
-      return `${p}${id}${count}`;
-    }
-
-    const translationObject = get(translations, p + id);
-    let translation: string | undefined = undefined;
-    let usingFallbackLanguage = false;
-
-    if (isTranslation(translationObject, language)) {
-      if (isTranslationBase(translationObject, language)) {
-        translation = translationObject[language];
-      } else if (params?.count && params.count > 1) {
-        translation = translationObject[language][1];
-        if (translation.includes('%n')) {
-          translation = translation.replace(/%n/g, params.count.toString());
-        }
-      } else if (params?.count === 0) {
-        translation = translationObject[language][2];
-      } else {
-        translation = translationObject[language][0];
-      }
-    } else if (fallbackLanguage) {
-      usingFallbackLanguage = true;
-      if (isTranslation(translationObject, fallbackLanguage)) {
-        if (isTranslationBase(translationObject, fallbackLanguage)) {
-          translation = translationObject[fallbackLanguage];
-        } else if (params?.count && params.count > 1) {
-          translation = translationObject[fallbackLanguage][1];
-          if (translation.includes('%n')) {
-            translation = translation.replace(/%n/g, params.count.toString());
-          }
-        } else if (params?.count === 0) {
-          translation = translationObject[fallbackLanguage][2];
-        } else {
-          translation = translationObject[fallbackLanguage][0];
-        }
-      }
-    }
-
-    checkForWarnings(
-      translation,
-      p + id,
+    return translate({
+      id,
       language,
-      usingFallbackLanguage,
-      params?.count,
+      translations,
+      params,
       fallbackLanguage,
-      suppressWarnings
-    );
-    return translation ?? p + id;
+      suppressWarnings,
+      showIds,
+    });
   }
 
   return { t, withPrefix, setLanguage, language };
@@ -241,4 +271,4 @@ function mergeTranslations(
   return res.reduce((acc, rec) => (acc = merge(acc, rec)), {});
 }
 
-export { TranslateProvider, useTranslate, T, mergeTranslations };
+export { TranslateProvider, useTranslate, T, mergeTranslations, translate };
