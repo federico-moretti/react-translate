@@ -225,7 +225,7 @@ const merged = mergeTranslations([
 
 | File      | % Stmts | % Branch | % Funcs | % Lines |
 | --------- | ------- | -------- | ------- | ------- |
-| All files | 98.97   | 91.67    | 100     | 98.82   |
+| All files | 99      | 91       | 100     | 99      |
 
 ## Licence
 
