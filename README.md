@@ -80,7 +80,7 @@ ReactDOM.render(
 
 ## API
 
-#### `t(id: string, params?: TranslateParams): string`
+### `t(id: string, params?: TranslateParams): string`
 
 It returns the translation as a string.
 
@@ -93,11 +93,11 @@ It returns the translation as a string.
   - `prefix?: string`
     - allows to always get nested translations
 
-#### `setLanguage(language: string): void`
+### `setLanguage(language: string): void`
 
 It changes the language in the provider.
 
-#### `withPrefix(prefix: string): function`
+### `withPrefix(prefix: string): function`
 
 It returns `t()` with the prefix already added.
 
@@ -108,7 +108,7 @@ const t = withPrefix('dashboard');
 const dashboardTitle = t('title'); // 'dashboard.title'
 ```
 
-#### `<T />`
+### `<T />`
 
 Creates a text node (or another element) with the translation.
 
@@ -118,7 +118,7 @@ Creates a text node (or another element) with the translation.
 - `prefix: string`
 - `count: number`
 
-#### `<TranslateProvider />`
+### `<TranslateProvider />`
 
 Wrap the app with the provider.
 
@@ -136,7 +136,7 @@ Wrap the app with the provider.
 - `showIds: boolean`
   - show translation ids
 
-#### Translation object
+### Translation object
 
 ```js
 const translations = {
@@ -161,11 +161,35 @@ const translations = {
 };
 ```
 
-#### mergeTranslations(array): Translations
+### `translate(object): TranslateFunctionParams`
+
+Same logic of `t()` but exported to be used outside of the React context, for example in e2e tests.
+
+- `object`:
+  - `id: string`
+    - required
+  - `language: string`
+    - required
+  - `translations: Translations`
+    - the translations object
+    - required
+  - `params: TranslateParams`
+    - `count?: number`
+      - select singular, plural or zero
+      - if plural `%n` in a string will be replaced with the `count`
+    - `prefix?: string`
+      - allows to always get nested translations
+  - `fallbackLanguage: string`
+    - if a translation is missing this language will be used
+    - example: `en-GB`
+  - `suppressWarnings: boolean`
+    - hides the warnings in the console
+  - `showIds: boolean`
+    - show translation ids
+
+### `mergeTranslations(array): Translations`
 
 A function to merge different language files.
-
-#### mergeTranslations(array): Translations
 
 - `array: { language: string; translations: TranslationsWithoutLanguage }[]`
   - it will merge the translation using the language
