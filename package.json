@@ -14,7 +14,7 @@
     "test:coverage": "tsdx test --coverage",
     "test": "tsdx test --env=jsdom",
     "lint": "tsdx lint",
-    "prepublishOnly": "tsdx build"
+    "prepublishOnly": "tsdx build && tsdx test"
   },
   "peerDependencies": {
     "react": ">=16"
