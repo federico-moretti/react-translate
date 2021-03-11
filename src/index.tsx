@@ -82,6 +82,7 @@ function useTranslateDispatch() {
 type TranslateParams = {
   count?: number;
   prefix?: string;
+  returnIdIfMissing?: boolean;
 };
 
 type TranslateFunctionParams = {
@@ -102,12 +103,14 @@ function translate({
   fallbackLanguage,
   suppressWarnings,
   showIds,
-}: TranslateFunctionParams) {
+}: TranslateFunctionParams): string | undefined {
   const p = params?.prefix ? params.prefix + '.' : '';
 
+  const returnId = params?.returnIdIfMissing ?? true;
+
+  const countId = params?.count !== undefined ? ` (n. ${params.count})` : '';
   if (showIds) {
-    const count = params?.count !== undefined ? ` (n. ${params.count})` : '';
-    return `${p}${id}${count}`;
+    return `${p}${id}${countId}`;
   }
 
   const translationObject = get(translations, p + id);
@@ -154,7 +157,8 @@ function translate({
     fallbackLanguage,
     suppressWarnings
   );
-  return translation ?? p + id;
+  if (translation) return translation;
+  return returnId ? `${p}${id}${countId}` : undefined;
 }
 
 function useTranslate() {
@@ -173,7 +177,7 @@ function useTranslate() {
     };
   }
 
-  function t(id: string, params?: TranslateParams): string {
+  function t(id: string, params?: TranslateParams) {
     return translate({
       id,
       language,
