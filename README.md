@@ -92,6 +92,9 @@ It returns the translation as a string.
     - if plural `%n` in a string will be replaced with the `count`
   - `prefix?: string`
     - allows to always get nested translations
+  - `returnIdIfMissing: boolean`
+    - defaults to `true`
+    - allows to hide the translation id if missing
 
 ### `setLanguage(language: string): void`
 
@@ -117,6 +120,7 @@ Creates a text node (or another element) with the translation.
   - if `type` equals `p` it will return `<p>your translation</p>`
 - `prefix: string`
 - `count: number`
+- `returnIdIfMissing: boolean`
 
 ### `<TranslateProvider />`
 
@@ -179,6 +183,9 @@ Same logic of `t()` but exported to be used outside of the React context, for ex
       - if plural `%n` in a string will be replaced with the `count`
     - `prefix?: string`
       - allows to always get nested translations
+    - `returnIdIfMissing: boolean`
+      - defaults to `true`
+      - allows to hide the translation id if missing
   - `fallbackLanguage: string`
     - if a translation is missing this language will be used
     - example: `en-GB`
