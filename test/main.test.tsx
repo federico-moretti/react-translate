@@ -10,11 +10,17 @@ jest.useFakeTimers();
 // avoid errors spam
 global.console.error = jest.fn();
 
-function TBase(props: { id: string; count?: number; prefix?: string }) {
-  const { id, count, prefix } = props;
-  const params = count || prefix ? { count, prefix } : undefined;
+function TBase(props: {
+  id: string;
+  count?: number;
+  prefix?: string;
+  returnIdIfMissing?: boolean;
+}) {
+  const { id, count, prefix, returnIdIfMissing } = props;
+  const params = { count, prefix, returnIdIfMissing };
   const { t } = useTranslate();
-  return <>{t(id, params)}</>;
+  const translation = t(id, params);
+  return translation ? <>{translation}</> : null;
 }
 
 function TWithPrefix(props: { id: string; count?: number }) {
@@ -178,7 +184,7 @@ describe('Translate', () => {
     expect(container).toMatchInlineSnapshot(`
       <div>
         <p>
-          sub.apple
+          sub.apple (n. 6)
         </p>
       </div>
     `);
@@ -204,7 +210,7 @@ describe('Translate', () => {
     expect(container).toMatchInlineSnapshot(`
       <div>
         <p>
-          sub.apple
+          sub.apple (n. 6)
         </p>
       </div>
     `);
@@ -228,7 +234,7 @@ describe('Translate', () => {
     expect(container).toMatchInlineSnapshot(`
       <div>
         <p>
-          sub.apple
+          sub.apple (n. 8)
         </p>
       </div>
     `);
@@ -480,5 +486,30 @@ describe('Translate', () => {
         </>
       );
     }).toThrow('useTranslateState must be used within a TranslateProvider');
+  });
+
+  it('translates and return undefined if id is missing', () => {
+    const { container } = baseRender(
+      <Provider>
+        <T type="p" id="apple" />
+        <T type="p" id="apple" count={5} />
+        <T type="p" prefix="sub" id="apple" count={5} />
+        <TBase id="strawberry" returnIdIfMissing={false} />
+      </Provider>
+    );
+
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          Mela
+        </p>
+        <p>
+          Mele
+        </p>
+        <p>
+          sub.apple (n. 5)
+        </p>
+      </div>
+    `);
   });
 });
