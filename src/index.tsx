@@ -85,16 +85,43 @@ type TranslateParams = {
   returnIdIfMissing?: boolean;
 };
 
-type TranslateFunctionParams = {
+type TranslateParamsWithIds = {
+  count?: number;
+  prefix?: string;
+  returnIdIfMissing?: true;
+};
+
+type TranslateParamsWithoutIds = {
+  count?: number;
+  prefix?: string;
+  returnIdIfMissing: false;
+};
+
+type TranslateFunctionParamsWithIds = {
   id: string;
   language: string;
   translations: Translations;
-  params?: TranslateParams;
+  params?: TranslateParamsWithoutIds;
   fallbackLanguage?: string;
   suppressWarnings?: boolean;
   showIds?: boolean;
 };
 
+type TranslateFunctionParamsWithoutIds = {
+  id: string;
+  language: string;
+  translations: Translations;
+  params?: TranslateParamsWithIds;
+  fallbackLanguage?: string;
+  suppressWarnings?: boolean;
+  showIds?: boolean;
+};
+
+function translate(all: TranslateFunctionParamsWithoutIds): string | undefined;
+function translate(all: TranslateFunctionParamsWithIds): string;
+function translate(
+  all: TranslateFunctionParamsWithoutIds | TranslateFunctionParamsWithIds
+): string | undefined;
 function translate({
   id,
   language,
@@ -103,7 +130,7 @@ function translate({
   fallbackLanguage,
   suppressWarnings,
   showIds,
-}: TranslateFunctionParams): string | undefined {
+}: TranslateFunctionParamsWithoutIds | TranslateFunctionParamsWithIds) {
   const p = params?.prefix ? params.prefix + '.' : '';
 
   const returnId = params?.returnIdIfMissing ?? true;
@@ -173,11 +200,17 @@ function useTranslate() {
 
   function withPrefix(prefix: string) {
     return (id: string, params?: Omit<TranslateParams, 'prefix'>) => {
-      return t(id, { ...params, prefix });
+      return t(id, { ...params, prefix } as any);
     };
   }
 
-  function t(id: string, params?: TranslateParams) {
+  function t(id: string): string;
+  function t(
+    id: string,
+    params?: TranslateParamsWithoutIds
+  ): string | undefined;
+  function t(id: string, params?: TranslateParamsWithIds): string;
+  function t(id: string, params?: any) {
     return translate({
       id,
       language,
@@ -236,11 +269,11 @@ type TProps = {
   id: string;
   type?: keyof React.ReactHTML;
   prefix?: string;
-} & TranslateParams;
+} & (TranslateParamsWithIds | TranslateParamsWithoutIds);
 function T(props: TProps) {
   const { id, type = React.Fragment, ...params } = props;
   const { t } = useTranslate();
-  return React.createElement(type, undefined, t(id, params));
+  return React.createElement(type, undefined, t(id, params as any));
 }
 
 type TranslationsWithoutLanguage =

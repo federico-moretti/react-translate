@@ -32,8 +32,9 @@ const App = () => {
 
   return (
     <div>
-      <p>{t('pear')}</p>
-      <p>{t('apple', { count: 2 })}</p>
+      <p>{t('pear').toLowerCase()}</p>
+      <p>{t('pear', { returnIdIfMissing: false })?.toLowerCase()}</p>
+      <p>{t('apple', { count: 2 }).toLowerCase()}</p>
       <br />
       <p>{t('sub.strawberry')}</p>
       <p>{t('sub.strawberry', { count: 0 })}</p>

@@ -19,7 +19,7 @@ function TBase(props: {
   const { id, count, prefix, returnIdIfMissing } = props;
   const params = { count, prefix, returnIdIfMissing };
   const { t } = useTranslate();
-  const translation = t(id, params);
+  const translation = t(id, params as any);
   return translation ? <>{translation}</> : null;
 }
 
