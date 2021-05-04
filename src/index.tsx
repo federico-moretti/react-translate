@@ -198,11 +198,14 @@ function useTranslate() {
   } = useTranslateState();
   const setLanguage = useTranslateDispatch();
 
-  function withPrefix(prefix: string) {
-    return (id: string, params?: Omit<TranslateParams, 'prefix'>) => {
-      return t(id, { ...params, prefix } as any);
-    };
-  }
+  const withPrefix = React.useCallback(
+    (prefix: string) => {
+      return (id: string, params?: Omit<TranslateParams, 'prefix'>) => {
+        return t(id, { ...params, prefix } as any);
+      };
+    },
+    [language, translations, fallbackLanguage, suppressWarnings, showIds]
+  );
 
   function t(id: string): string;
   function t(
@@ -221,8 +224,15 @@ function useTranslate() {
       showIds,
     });
   }
+  const tWithUseCallback = React.useCallback(t, [
+    language,
+    translations,
+    fallbackLanguage,
+    suppressWarnings,
+    showIds,
+  ]);
 
-  return { t, withPrefix, setLanguage, language };
+  return { t: tWithUseCallback, withPrefix, setLanguage, language };
 }
 
 function checkForWarnings(
