@@ -200,9 +200,19 @@ function useTranslate() {
 
   const withPrefix = React.useCallback(
     (prefix: string) => {
-      return (id: string, params?: Omit<TranslateParams, 'prefix'>) => {
+      function tWithPrefix(id: string): string;
+      function tWithPrefix(
+        id: string,
+        params?: Omit<TranslateParamsWithoutIds, 'prefix'>
+      ): string | undefined;
+      function tWithPrefix(
+        id: string,
+        params?: Omit<TranslateParamsWithIds, 'prefix'>
+      ): string;
+      function tWithPrefix(id: string, params?: any) {
         return t(id, { ...params, prefix } as any);
-      };
+      }
+      return tWithPrefix;
     },
     [language, translations, fallbackLanguage, suppressWarnings, showIds]
   );
