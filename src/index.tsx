@@ -9,7 +9,7 @@ type TranslationWithPlural = { [language: string]: string[] };
 export type Translation = TranslationBase | TranslationWithPlural;
 export type Translations = { [key: string]: Translation | Translations };
 
-type Dispatch = (language: string) => void;
+type Dispatch = { setLanguage: (language: string) => void };
 type TranslateProviderProps = {
   translations: Translations;
   children: React.ReactNode;
@@ -27,9 +27,7 @@ type State = {
 };
 
 const TranslateStateContext = React.createContext<State | undefined>(undefined);
-const TranslateDispatchContext = React.createContext<Dispatch | undefined>(
-  undefined
-);
+const TranslateDispatchContext = React.createContext<Dispatch | undefined>(undefined);
 
 function TranslateProvider({
   defaultLanguage,
@@ -52,9 +50,7 @@ function TranslateProvider({
         showIds,
       }}
     >
-      <TranslateDispatchContext.Provider value={setLanguage}>
-        {children}
-      </TranslateDispatchContext.Provider>
+      <TranslateDispatchContext.Provider value={{ setLanguage }}>{children}</TranslateDispatchContext.Provider>
     </TranslateStateContext.Provider>
   );
 }
@@ -62,9 +58,7 @@ function TranslateProvider({
 function useTranslateState() {
   const context = React.useContext(TranslateStateContext);
   if (context === undefined) {
-    throw new Error(
-      'useTranslateState must be used within a TranslateProvider'
-    );
+    throw new Error('useTranslateState must be used within a TranslateProvider');
   }
   return context;
 }
@@ -72,56 +66,29 @@ function useTranslateState() {
 function useTranslateDispatch() {
   const context = React.useContext(TranslateDispatchContext);
   if (context === undefined) {
-    throw new Error(
-      'useTranslateDispatch must be used within a TranslateProvider'
-    );
+    throw new Error('useTranslateDispatch must be used within a TranslateProvider');
   }
   return context;
 }
 
-type TranslateParams = {
+type TranslateParams<R extends boolean = true> = {
   count?: number;
   prefix?: string;
   returnIdIfMissing?: boolean;
 };
 
-type TranslateParamsWithIds = {
-  count?: number;
-  prefix?: string;
-  returnIdIfMissing?: true;
-};
-
-type TranslateParamsWithoutIds = {
-  count?: number;
-  prefix?: string;
-  returnIdIfMissing: false;
-};
-
-type TranslateFunctionParamsWithIds = {
+type TranslateFunctionParams<R extends boolean = true> = {
   id: string;
   language: string;
   translations: Translations;
-  params?: TranslateParamsWithoutIds;
+  params?: TranslateParams<R>;
   fallbackLanguage?: string;
   suppressWarnings?: boolean;
   showIds?: boolean;
 };
 
-type TranslateFunctionParamsWithoutIds = {
-  id: string;
-  language: string;
-  translations: Translations;
-  params?: TranslateParamsWithIds;
-  fallbackLanguage?: string;
-  suppressWarnings?: boolean;
-  showIds?: boolean;
-};
-
-function translate(all: TranslateFunctionParamsWithoutIds): string | undefined;
-function translate(all: TranslateFunctionParamsWithIds): string;
-function translate(
-  all: TranslateFunctionParamsWithoutIds | TranslateFunctionParamsWithIds
-): string | undefined;
+function translate(all: TranslateFunctionParams<false>): string | undefined;
+function translate(all: TranslateFunctionParams<true>): string;
 function translate({
   id,
   language,
@@ -130,7 +97,17 @@ function translate({
   fallbackLanguage,
   suppressWarnings,
   showIds,
-}: TranslateFunctionParamsWithoutIds | TranslateFunctionParamsWithIds) {
+}: TranslateFunctionParams): string | undefined;
+
+function translate({
+  id,
+  language,
+  translations,
+  params,
+  fallbackLanguage,
+  suppressWarnings,
+  showIds,
+}: TranslateFunctionParams): string | undefined {
   const p = params?.prefix ? params.prefix + '.' : '';
 
   const returnId = params?.returnIdIfMissing ?? true;
@@ -184,46 +161,34 @@ function translate({
     fallbackLanguage,
     suppressWarnings
   );
-  if (translation) return translation;
+
+  if (translation) {
+    return translation;
+  }
+
   return returnId ? `${p}${id}${countId}` : undefined;
 }
 
-function useTranslate() {
-  const {
-    language,
-    translations,
-    fallbackLanguage,
-    suppressWarnings,
-    showIds,
-  } = useTranslateState();
-  const setLanguage = useTranslateDispatch();
+interface UseTranslate {
+  t(id: string): string;
+  t(id: string, params?: TranslateParams<true>): string;
+  t(id: string, params?: TranslateParams<false>): string | undefined;
+  t(id: string, params?: TranslateParams<boolean>): string | undefined;
+  withPrefix(prefix: string): (id: string, params?: Omit<TranslateParams, 'prefix'>) => string | undefined;
+  withPrefix(prefix: string): (id: string, params?: Omit<TranslateParams<false>, 'prefix'>) => string | undefined;
+  withPrefix(prefix: string): (id: string, params?: Omit<TranslateParams<true>, 'prefix'>) => string;
+  setLanguage: (lang: string) => void;
+  language: string;
+}
 
-  const withPrefix = React.useCallback(
-    (prefix: string) => {
-      function tWithPrefix(id: string): string;
-      function tWithPrefix(
-        id: string,
-        params?: Omit<TranslateParamsWithoutIds, 'prefix'>
-      ): string | undefined;
-      function tWithPrefix(
-        id: string,
-        params?: Omit<TranslateParamsWithIds, 'prefix'>
-      ): string;
-      function tWithPrefix(id: string, params?: any) {
-        return t(id, { ...params, prefix } as any);
-      }
-      return tWithPrefix;
-    },
-    [language, translations, fallbackLanguage, suppressWarnings, showIds]
-  );
+function useTranslate(): UseTranslate {
+  const { language, translations, fallbackLanguage, suppressWarnings, showIds } = useTranslateState();
+  const { setLanguage } = useTranslateDispatch();
 
   function t(id: string): string;
-  function t(
-    id: string,
-    params?: TranslateParamsWithoutIds
-  ): string | undefined;
-  function t(id: string, params?: TranslateParamsWithIds): string;
-  function t(id: string, params?: any) {
+  function t(id: string, params?: TranslateParams<true>): string;
+  function t(id: string, params?: TranslateParams<false>): string | undefined;
+  function t(id: string, params?: TranslateParams<boolean>): string | undefined {
     return translate({
       id,
       language,
@@ -234,15 +199,23 @@ function useTranslate() {
       showIds,
     });
   }
-  const tWithUseCallback = React.useCallback(t, [
-    language,
-    translations,
-    fallbackLanguage,
-    suppressWarnings,
-    showIds,
-  ]);
 
-  return { t: tWithUseCallback, withPrefix, setLanguage, language };
+  const tMemo = React.useCallback(t, [language, translations, fallbackLanguage, suppressWarnings, showIds]);
+
+  const withPrefix = React.useCallback(
+    (prefix: string) => {
+      function withPrefix(id: string, params?: Omit<TranslateParams, 'prefix'>): string | undefined;
+      function withPrefix(id: string, params?: Omit<TranslateParams<false>, 'prefix'>): string | undefined;
+      function withPrefix(id: string, params?: Omit<TranslateParams<true>, 'prefix'>): string;
+      function withPrefix(id: string, params?: Omit<TranslateParams, 'prefix'>): string | undefined {
+        return tMemo(id, { ...params, prefix });
+      }
+      return withPrefix;
+    },
+    [tMemo]
+  );
+
+  return { t: tMemo, withPrefix, setLanguage, language };
 }
 
 function checkForWarnings(
@@ -253,20 +226,16 @@ function checkForWarnings(
   count?: number,
   fallbackLanguage?: string,
   suppressWarnings?: boolean
-) {
+): void {
   setTimeout(() => {
     if (!suppressWarnings) {
       const countString = count !== undefined ? `(n. ${count})` : '';
 
       if (t && usingFallbackLanguage) {
-        console.warn(
-          `[T] Missing id but using fallback: ${id} ${countString}(${language})`
-        );
+        console.warn(`[T] Missing id but using fallback: ${id} ${countString}(${language})`);
       }
       if (!t && usingFallbackLanguage) {
-        console.warn(
-          `[T] Missing id and fallback: ${id} ${countString}(${language} - ${fallbackLanguage})`
-        );
+        console.warn(`[T] Missing id and fallback: ${id} ${countString}(${language} - ${fallbackLanguage})`);
       } else if (!t) {
         console.warn(`[T] Missing id: ${id} ${countString}(${language})`);
       }
@@ -274,36 +243,31 @@ function checkForWarnings(
   }, 0);
 }
 
-function isTranslationBase(
-  object: any,
-  language: string
-): object is TranslationBase {
-  return object && typeof object[language] === 'string';
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
-function isTranslation(object: any, language: string): object is Translation {
-  return object?.[language];
+function isTranslationBase(object: unknown, language: string): object is TranslationBase {
+  return isRecord(object) && typeof object[language] === 'string';
+}
+
+function isTranslation(object: unknown, language: string): object is Translation {
+  return isRecord(object) && Boolean(object[language]);
 }
 
 type TProps = {
   id: string;
   type?: keyof React.ReactHTML;
   prefix?: string;
-} & (TranslateParamsWithIds | TranslateParamsWithoutIds);
+} & TranslateParams;
 function T(props: TProps) {
   const { id, type = React.Fragment, ...params } = props;
   const { t } = useTranslate();
-  return React.createElement(type, undefined, t(id, params as any));
+  return React.createElement(type, undefined, t(id, params));
 }
 
-type TranslationsWithoutLanguage =
-  | string
-  | string[]
-  | { [key: string]: TranslationsWithoutLanguage };
-function addLanguageToTranslations(
-  translations: TranslationsWithoutLanguage,
-  language: string
-) {
+type TranslationsWithoutLanguage = string | string[] | { [key: string]: TranslationsWithoutLanguage };
+function addLanguageToTranslations(translations: TranslationsWithoutLanguage, language: string) {
   const obj: Translations = {};
   Object.entries(translations).forEach(([key, value]) => {
     obj[key] = {};
@@ -322,9 +286,7 @@ function mergeTranslations(
     translations: TranslationsWithoutLanguage;
   }[]
 ) {
-  const res = array.map(({ language, translations }) =>
-    addLanguageToTranslations(translations, language)
-  );
+  const res = array.map(({ language, translations }) => addLanguageToTranslations(translations, language));
   return res.reduce((acc, rec) => (acc = merge(acc, rec)), {});
 }
 

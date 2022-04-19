@@ -1,7 +1,7 @@
 import 'react-app-polyfill/ie11';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { TranslateProvider, useTranslate } from '../.';
+import { TranslateProvider, useTranslate } from '../src/index';
 
 const translations = {
   pear: {
@@ -57,11 +57,7 @@ const App = () => {
 };
 
 ReactDOM.render(
-  <TranslateProvider
-    defaultLanguage="it"
-    fallbackLanguage="en"
-    translations={translations}
-  >
+  <TranslateProvider defaultLanguage="it" fallbackLanguage="en" translations={translations}>
     <App />
   </TranslateProvider>,
   document.getElementById('root')

@@ -14,6 +14,7 @@
     "test:coverage": "tsdx test --coverage",
     "test": "tsdx test --env=jsdom",
     "lint": "tsdx lint",
+    "prettier": "prettier --write \"**/*.{ts,tsx}\"",
     "prepublishOnly": "tsdx build && tsdx test"
   },
   "peerDependencies": {
@@ -25,7 +26,7 @@
     }
   },
   "prettier": {
-    "printWidth": 80,
+    "printWidth": 120,
     "semi": true,
     "singleQuote": true,
     "trailingComma": "es5"

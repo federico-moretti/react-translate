@@ -10,16 +10,16 @@ jest.useFakeTimers();
 // avoid errors spam
 global.console.error = jest.fn();
 
-function TBase(props: {
-  id: string;
-  count?: number;
-  prefix?: string;
-  returnIdIfMissing?: boolean;
-}) {
+function TBase(props: { id: string; count?: number; prefix?: string; returnIdIfMissing?: boolean }) {
   const { id, count, prefix, returnIdIfMissing } = props;
   const params = { count, prefix, returnIdIfMissing };
   const { t } = useTranslate();
-  const translation = t(id, params as any);
+  const translation = t(id, params);
+
+  if (returnIdIfMissing === false) {
+    translation.split('');
+  }
+
   return translation ? <>{translation}</> : null;
 }
 
@@ -47,12 +47,7 @@ function Provider({
   suppressWarnings?: boolean;
   showIds?: boolean;
 }): React.ReactElement {
-  const fallback =
-    fallbackLanguage === null
-      ? undefined
-      : fallbackLanguage
-      ? fallbackLanguage
-      : 'en';
+  const fallback = fallbackLanguage === null ? undefined : fallbackLanguage ? fallbackLanguage : 'en';
 
   return (
     <TranslateProvider
@@ -151,9 +146,7 @@ describe('Translate', () => {
   });
 
   it('translates with 0 count', () => {
-    const { container } = render(
-      <T type="p" prefix="sub" id="strawberry" count={0} />
-    );
+    const { container } = render(<T type="p" prefix="sub" id="strawberry" count={0} />);
 
     expect(container).toMatchInlineSnapshot(`
       <div>
@@ -174,9 +167,7 @@ describe('Translate', () => {
     );
 
     jest.runAllTimers();
-    expect(consoleSpy).toHaveBeenCalledWith(
-      '[T] Missing id: sub.apple (n. 6)(it)'
-    );
+    expect(consoleSpy).toHaveBeenCalledWith('[T] Missing id: sub.apple (n. 6)(it)');
 
     consoleSpy.mockReset();
     consoleSpy.mockRestore();
@@ -200,9 +191,7 @@ describe('Translate', () => {
     );
 
     jest.runAllTimers();
-    expect(consoleSpy).toHaveBeenCalledWith(
-      '[T] Missing id and fallback: sub.apple (n. 6)(it - en)'
-    );
+    expect(consoleSpy).toHaveBeenCalledWith('[T] Missing id and fallback: sub.apple (n. 6)(it - en)');
 
     consoleSpy.mockReset();
     consoleSpy.mockRestore();
@@ -418,36 +407,46 @@ describe('Translate', () => {
 
     jest.runAllTimers();
     expect(consoleSpy).toHaveBeenCalledTimes(6);
-    expect(consoleSpy).toHaveBeenNthCalledWith(
-      1,
-      '[T] Missing id but using fallback: pear (de)'
-    );
-    expect(consoleSpy).toHaveBeenNthCalledWith(
-      2,
-      '[T] Missing id and fallback: banana (de - en)'
-    );
-    expect(consoleSpy).toHaveBeenNthCalledWith(
-      3,
-      '[T] Missing id but using fallback: sub.orange (de)'
-    );
-    expect(consoleSpy).toHaveBeenNthCalledWith(
-      4,
-      '[T] Missing id but using fallback: sub.strawberry (n. 0)(de)'
-    );
-    expect(consoleSpy).toHaveBeenNthCalledWith(
-      5,
-      '[T] Missing id but using fallback: sub.strawberry (n. 1)(de)'
-    );
-    expect(consoleSpy).toHaveBeenNthCalledWith(
-      6,
-      '[T] Missing id but using fallback: sub.strawberry (n. 10)(de)'
-    );
+    expect(consoleSpy).toHaveBeenNthCalledWith(1, '[T] Missing id but using fallback: pear (de)');
+    expect(consoleSpy).toHaveBeenNthCalledWith(2, '[T] Missing id and fallback: banana (de - en)');
+    expect(consoleSpy).toHaveBeenNthCalledWith(3, '[T] Missing id but using fallback: sub.orange (de)');
+    expect(consoleSpy).toHaveBeenNthCalledWith(4, '[T] Missing id but using fallback: sub.strawberry (n. 0)(de)');
+    expect(consoleSpy).toHaveBeenNthCalledWith(5, '[T] Missing id but using fallback: sub.strawberry (n. 1)(de)');
+    expect(consoleSpy).toHaveBeenNthCalledWith(6, '[T] Missing id but using fallback: sub.strawberry (n. 10)(de)');
 
     consoleSpy.mockReset();
     consoleSpy.mockRestore();
   });
 
   it('translates with showIds toggled', () => {
+    const { container } = baseRender(
+      <Provider showIds>
+        <T type="p" id="apple" />
+        <T type="p" id="apple" count={0} />
+        <T type="p" prefix="sub" id="apple" count={5} />
+        <TWithPrefix id="strawberry" />
+      </Provider>
+    );
+
+    expect(container).toMatchInlineSnapshot(`
+      <div>
+        <p>
+          apple
+        </p>
+        <p>
+          apple (n. 0)
+        </p>
+        <p>
+          sub.apple (n. 5)
+        </p>
+        <p>
+          sub.strawberry
+        </p>
+      </div>
+    `);
+  });
+
+  it('translates with `returnIdIfMissing`', () => {
     const { container } = baseRender(
       <Provider showIds>
         <T type="p" id="apple" />
